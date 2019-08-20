@@ -1,5 +1,23 @@
-# Container Action Template
+# [GitHub Action] Flarum JavaScript Building
 
-To get started, click the `Use this template` button on this repository [which will create a new repository based on this template](https://github.blog/2019-06-06-generate-new-repositories-with-repository-templates/).
+You must be in the GitHub Actions beta to be able to use GitHub Actions in your repositories and/or organizations.
 
-For info on how to build your first Container action, see the [toolkit docs folder](https://github.com/actions/toolkit/blob/master/docs/container-action.md).
+This action automatically compiles & commits yours JavaScript extension files on every commit.
+
+## Example Workflow
+
+```yml
+name: Flarum Build
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - uses: flarum/action-build@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
