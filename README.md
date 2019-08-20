@@ -21,3 +21,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+### Only Build on Master
+
+If you only want to run the workflow when commits are pushed to the `master` branch, add the following to the workflow file:
+
+```yml
+push:
+  branches:
+    - master
+```
