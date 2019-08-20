@@ -19,4 +19,6 @@ npm run build
 git add dist/* -f
 git commit -m "Bundled output for commit $GITHUB_SHA [skip ci]"
 
-git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" $GITHUB_REF
+GITHUB_BRANCH=`git rev-parse --abbrev-ref HEAD`
+
+git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" $GITHUB_BRANCH
