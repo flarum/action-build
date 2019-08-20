@@ -24,10 +24,11 @@ jobs:
 
 ### Only Build on Master
 
-If you only want to run the workflow when commits are pushed to the `master` branch, add the following to the workflow file:
+If you only want to run the workflow when commits are pushed to the `master` branch, change `on: push` to the following:
 
 ```yml
-push:
-  branches:
-    - master
+on:
+  push:
+    branches:
+      - master
 ```
