@@ -3,7 +3,7 @@
 style='\e[47;1;31m'
 reset='\e[0;10m'
 
-if [ -z $GITHUB_TOKEN ]; then
+if [ -z "$GITHUB_TOKEN" ]; then
     echo -e "\e[0;31mGITHUB_TOKEN is not set."
     exit 1
 fi
@@ -15,7 +15,7 @@ git config user.email 'bot@flarum.org'
 
 echo -e "$style - installing dependencies $reset"
 
-cd js
+cd js || exit 1
 npm i -g npm@6.1.0
 npm ci
 
@@ -34,7 +34,7 @@ echo -e "$style - committing and pushing $reset"
 
 git commit -m "Bundled output for commit $GITHUB_SHA [skip ci]"
 
-OUT="$(git push https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git HEAD:$GITHUB_REF 2>&1 > /dev/null)"
+OUT="$(git push https://"$GITHUB_ACTOR":"$GITHUB_TOKEN"@github.com/"$GITHUB_REPOSITORY".git HEAD:"$GITHUB_REF" 2>&1 > /dev/null)"
 
 if grep -q "the remote contains work that you do\|a pushed branch tip is behind its remote" <<< "$OUT"; then
     echo -e "$style - HEAD is behind $reset"
