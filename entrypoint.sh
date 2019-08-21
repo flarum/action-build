@@ -1,10 +1,10 @@
 #!/bin/bash -l
 
-style="$(tput bold)$(tput setaf 1)$(tput setab 7)"
-reset="$(tput sgr0)"
+style='\e[47;1;31m'
+reset='\e[0;10m'
 
 if [ -z $GITHUB_TOKEN ]; then
-    echo -e "$(tput setaf 1)GITHUB_TOKEN is not set."
+    echo -e "\e[0;31mGITHUB_TOKEN is not set."
     exit 1
 fi
 
