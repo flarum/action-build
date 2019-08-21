@@ -27,15 +27,15 @@ git add dist/* -f
 echo -e "$style - checking remote $reset"
 
 # check if latest commit, if not exit
-git fetch origin -q
-
-behind=$(git log --oneline HEAD..origin 2>/dev/null | wc -l)
+UPSTREAM=${1:-'@{u}'}
+LOCAL=$(git rev-parse @)
+BASE=$(git merge-base @ "$UPSTREAM")
 
 if [[ -z $(git status -uno --porcelain) ]]; then
     echo -e "$style - nothing to commit $reset"
     exit
-elif [[ $behind -gt 0 ]]; then
-    echo -e "$style - HEAD is behind by $behind commit(s) $reset"
+elif [ $LOCAL = $BASE ]; then
+    echo -e "$style - HEAD is behind $reset"
     exit
 fi
 
