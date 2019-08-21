@@ -8,7 +8,7 @@ if [ -z $GITHUB_TOKEN ]; then
     exit 1
 fi
 
-BRANCH=`git name-rev --name-only HEAD`
+BRANCH=`git name-rev --name-only HEAD | sed 's/~[0-9]$//'`
 
 echo -e "$style - checking out $BRANCH $reset"
 
