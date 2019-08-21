@@ -34,15 +34,16 @@ echo -e "$style - committing and pushing $reset"
 
 git commit -m "Bundled output for commit $GITHUB_SHA [skip ci]"
 
-ERR="$(git push https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git HEAD:$GITHUB_REF 2>&1 > /dev/null)"
+OUT="$(git push https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git HEAD:$GITHUB_REF 2>&1 > /dev/null)"
 
-if grep -q "the remote contains work that you do\|a pushed branch tip is behind its remote" <<< "$ERR"; then
+if grep -q "the remote contains work that you do\|a pushed branch tip is behind its remote" <<< "$OUT"; then
     echo -e "$style - HEAD is behind $reset"
     exit
-elif [[ -n "${ERR/[ ]*\n/}" ]]; then
+elif grep -q "fatal:\|error:" <<< "$OUT" then
     echo -e "$style - error $reset"
-    echo "$ERR"
+    echo "$OUT"
     exit 1
 else
     echo -e "$style - success $reset"
+    echo "$OUT"
 fi
