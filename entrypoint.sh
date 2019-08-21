@@ -3,10 +3,22 @@
 style='\e[47;1;31m'
 reset='\e[0;10m'
 
+# log commands run, useful when debugging
+trap 'log "$BASH_COMMAND"' DEBUG
+
+log() {
+    # ignore echo commands
+    if [[ $1 != echo* ]]; then
+        echo "##[command]$1"
+    fi
+}
+
 if [ -z "$GITHUB_TOKEN" ]; then
     echo -e "\e[0;31mGITHUB_TOKEN is not set."
     exit 1
 fi
+
+# script
 
 echo -e "$style - setting up git $reset"
 
