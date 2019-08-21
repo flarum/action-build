@@ -10,15 +10,18 @@ fi
 
 BRANCH=`git name-rev --name-only HEAD`
 
+echo -e "$style - checking out $BRANCH $reset"
+
 git checkout -f $BRANCH
+
+echo -e "$style - setting up git $reset"
 
 git config user.name 'flarum-bot'
 git config user.email 'bot@flarum.org'
 
-cd js
-
 echo -e "$style - installing dependencies $reset"
 
+cd js
 npm i -g npm@6.1.0
 npm ci
 
