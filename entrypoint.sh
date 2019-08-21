@@ -41,7 +41,7 @@ if grep -q "the remote contains work that you do\|a pushed branch tip is behind 
     exit
 elif [[ -n "${ERR/[ ]*\n/}" ]]; then
     echo -e "$style - error $reset"
-    echo $ERR
+    echo "$ERR"
     exit 1
 else
     echo -e "$style - success $reset"
