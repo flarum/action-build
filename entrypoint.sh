@@ -8,12 +8,6 @@ if [ -z $GITHUB_TOKEN ]; then
     exit 1
 fi
 
-BRANCH=`git name-rev --name-only HEAD | sed 's/~[0-9]$//' | sed 's/^remotes\/origin\///'`
-
-echo -e "$style - checking out $BRANCH $reset"
-
-git checkout -f $BRANCH
-
 echo -e "$style - setting up git $reset"
 
 git config user.name 'flarum-bot'
@@ -40,4 +34,11 @@ echo -e "$style - committing and pushing $reset"
 
 git commit -m "Bundled output for commit $GITHUB_SHA [skip ci]"
 
-git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" $BRANCH
+OUT="$(git push https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git HEAD:$GITHUB_REF 2>&1)"
+
+if grep -q "the remote contains work that you do" <<< "$OUT"; then
+    echo -e "$style - HEAD is behind $reset"
+    exit
+fi
+
+(>&2 echo $OUT)
