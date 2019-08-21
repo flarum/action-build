@@ -8,6 +8,10 @@ if [ -z $GITHUB_TOKEN ]; then
     exit 1
 fi
 
+BRANCH=`git name-rev --name-only HEAD`
+
+git checkout -f $BRANCH
+
 git config user.name 'flarum-bot'
 git config user.email 'bot@flarum.org'
 
@@ -24,26 +28,13 @@ npm run build
 
 git add dist/* -f
 
-echo -e "$style - checking remote $reset"
-
-# check if latest commit, if not exit
-UPSTREAM=${1:-'@{u}'}
-LOCAL=$(git rev-parse @)
-BASE=$(git merge-base @ "$UPSTREAM")
-
 if [[ -z $(git status -uno --porcelain) ]]; then
     echo -e "$style - nothing to commit $reset"
     exit
-elif [ $LOCAL = $BASE ]; then
-    echo -e "$style - HEAD is behind $reset"
-    exit
 fi
 
-echo -e "$style - committing $reset"
+echo -e "$style - committing and pushing $reset"
 
 git commit -m "Bundled output for commit $GITHUB_SHA [skip ci]"
 
-# push
-echo -e "$style - pushing $reset"
-
-git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:$GITHUB_REF"
+git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" $BRANCH
