@@ -1,5 +1,8 @@
 #!/bin/bash -l
 
+# exit on error
+set -e
+
 style='\e[47;1;31m'
 reset='\e[0;10m'
 
