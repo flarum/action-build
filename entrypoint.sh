@@ -31,7 +31,7 @@ git config user.email 'bot@flarum.org'
 echo -e "$style - installing dependencies $reset"
 
 cd js || exit 1
-npm i -g npm@7.8.0
+npm i -g npm@7.11.2
 npm ci
 
 echo -e "$style - building JavaScript files $reset"
