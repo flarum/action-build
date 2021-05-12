@@ -31,7 +31,7 @@ if [ -z "$INPUT_BUILD_SCRIPT" ]; then
 fi
 
 if [ -z "$INPUT_PACKAGE_MANAGER" ]; then
-  INPUT_BUILD_SCRIPT = "npm"
+  INPUT_PACKAGE_MANAGER = "npm"
 fi
 
 # script
