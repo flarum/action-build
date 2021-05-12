@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
-      - uses: flarum/action-build@master
+      - uses: flarum/action-build@2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           build_script: build # npm run build
