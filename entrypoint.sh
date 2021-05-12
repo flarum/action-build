@@ -27,15 +27,15 @@ if [ -z "$INPUT_GITHUB_TOKEN" ]; then
 fi
 
 if [ -z "$INPUT_BUILD_SCRIPT" ]; then
-  INPUT_BUILD_SCRIPT = "build"
+  INPUT_BUILD_SCRIPT="build"
 fi
 
 if [ -z "$INPUT_PACKAGE_MANAGER" ]; then
-  INPUT_PACKAGE_MANAGER = "npm"
+  INPUT_PACKAGE_MANAGER="npm"
 fi
 
 if [ -z "$INPUT_JS_PATH" ]; then
-  INPUT_JS_PATH = "./js"
+  INPUT_JS_PATH="./js"
 fi
 
 # script
