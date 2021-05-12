@@ -36,7 +36,7 @@ echo -e "$style - setting up git $reset"
 git config user.name 'flarum-bot'
 git config user.email 'bot@flarum.org'
 
-echo -e "$style - installing dependencies $reset"
+echo -e "$style - installing dependencies with $INPUT_PACKAGE_MANAGER $reset"
 
 cd js || exit 1
 
@@ -49,14 +49,23 @@ else
   yarn install --frozen-lockfile
 fi
 
-echo -e "$style - building JavaScript files $reset"
+echo -e "$style - building Javascript/Typescript files $reset"
 
-# npm run xxx or yarn run xxx
+# Equivalent to npm run xxx or yarn run xxx
 $INPUT_PACKAGE_MANAGER run $INPUT_BUILD_SCRIPT
 
+# Build and add typings to staged files
 if [ -v INPUT_TYPINGS_SCRIPT ]; then
+  echo -e "$style - building typings $reset"
+
+  # Typings build often has errors -- let's not exit if we have any issues
+  set +e
   $INPUT_PACKAGE_MANAGER run $INPUT_TYPINGS_SCRIPT
+  set -e
+
   git add dist-typings/* -f
+else
+  echo -e "$style - not building typings $reset"
 fi
 
 git add dist/* -f
