@@ -19,7 +19,7 @@ log() {
 if [ -z "$INPUT_GITHUB_TOKEN" ]; then
   # Backwards compatibility with `env` options method
   if [ -v GITHUB_TOKEN ]; then
-    $INPUT_GITHUB_TOKEN=$GITHUB_TOKEN
+    INPUT_GITHUB_TOKEN=$GITHUB_TOKEN
   else
     echo -e "\e[0;31mGITHUB_TOKEN is not set."
     exit 1
