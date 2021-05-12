@@ -17,8 +17,13 @@ log() {
 }
 
 if [ -z "$INPUT_GITHUB_TOKEN" ]; then
-  echo -e "\e[0;31mGITHUB_TOKEN is not set."
-  exit 1
+  # Backwards compatibility with `env` options method
+  if [ -v GITHUB_TOKEN ]; then
+    $INPUT_GITHUB_TOKEN=$GITHUB_TOKEN
+  else
+    echo -e "\e[0;31mGITHUB_TOKEN is not set."
+    exit 1
+  fi
 fi
 
 if [ -z "$INPUT_BUILD_SCRIPT" ]; then
