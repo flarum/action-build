@@ -75,8 +75,11 @@ if [ -v INPUT_TYPINGS_SCRIPT ]; then
   set -e
 
   git add dist-typings/* -f
+
+  COMMIT_DESC="Includes transpiled JS/TS, and Typescript declaration files (typings)."
 else
   echo -e "$style - not building typings $reset"
+  COMMIT_DESC="Includes transpiled JS/TS."
 fi
 
 git add dist/* -f
@@ -88,7 +91,8 @@ fi
 
 echo -e "$style - committing and pushing $reset"
 
-git commit -m "Bundled output for commit $GITHUB_SHA [skip ci]"
+# Multiple `-m`s are treated as separate paragraphs by git.
+git commit -m "Bundled output for commit $GITHUB_SHA" -m "$COMMIT_DESC" -m "[skip ci]"
 
 # no longer exit on error
 set +e
