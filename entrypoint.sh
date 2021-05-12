@@ -34,6 +34,10 @@ if [ -z "$INPUT_PACKAGE_MANAGER" ]; then
   INPUT_PACKAGE_MANAGER = "npm"
 fi
 
+if [ -z "$INPUT_JS_PATH" ]; then
+  INPUT_JS_PATH = "./js"
+fi
+
 # script
 
 echo -e "$style - setting up git $reset"
@@ -41,9 +45,11 @@ echo -e "$style - setting up git $reset"
 git config user.name 'flarum-bot'
 git config user.email 'bot@flarum.org'
 
-echo -e "$style - installing dependencies with $INPUT_PACKAGE_MANAGER $reset"
+echo -e "$style - entering JS path ($INPUT_JS_PATH) $reset"
 
-cd js || exit 1
+cd $INPUT_JS_PATH || exit 1
+
+echo -e "$style - installing dependencies with $INPUT_PACKAGE_MANAGER $reset"
 
 npm i -g npm@^7
 
