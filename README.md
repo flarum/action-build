@@ -18,11 +18,31 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - uses: flarum/action-build@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          build_script: build             # npm run build
+          typings_script: build-typings   # npm run build-typings
+          package_manager: npm            # Use NPM, not Yarn
 ```
 
-### Only Build on Master
+## Options
+
+Here is a full list of options available using the `with` syntax:
+
+| Name              | Required | Description                                                                                      | Example                       | Default |
+| ----------------- | -------- | ------------------------------------------------------------------------------------------------ | ----------------------------- | ------- |
+| `github_token`    | Yes      | Your Actions GitHub token. The example value should work for this by default.                    | `${{ secrets.GITHUB_TOKEN }}` | None    |
+| `build_script`    | Yes      | The `package.json` script to run to build your extension JS.                                     | `build`                       | `build` |
+| `typings_script`  | No       | If defined, runs the script of this name in `package.json` to build typings for your extension.  | `build-typings`               | Unset   |
+| `package_manager` | No       | Either `yarn` or `npm`. Will install dependencies and build using the specified package manager. | `yarn`                        | `npm`   |
+
+### Assumptions
+
+Your Javascript must be in a `js` folder, similar to how Flarum core and Flarum's first-party extensions are laid out.
+
+If building typings, we assume that they are built to `js/dist-typings`, as set in the example `tsconfig.json` found on the [flarum-tsconfig](https://github.com/flarum/flarum-tsconfig).
+
+## Only Build on Master
 
 If you only want to run the workflow when commits are pushed to the `master` branch, change `on: push` to the following:
 
