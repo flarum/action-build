@@ -56,7 +56,11 @@ npm i -g npm@^7
 if [[ "$INPUT_PACKAGE_MANAGER" == "npm" ]]; then
   npm ci
 else
+  # Yarn is usually installed as part of `actions/setup-node`
+  # so let's ignore any errors here.
+  set +e
   npm i -g yarn
+  set -e
   yarn install --frozen-lockfile
 fi
 
