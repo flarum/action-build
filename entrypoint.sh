@@ -38,8 +38,8 @@ if [ -z "$INPUT_JS_PATH" ]; then
   INPUT_JS_PATH="./js"
 fi
 
-if [ -z "$DO_NOT_COMMIT" ]; then
-  DO_NOT_COMMIT="false"
+if [ -z "$INPUT_DO_NOT_COMMIT" ]; then
+  INPUT_DO_NOT_COMMIT="false"
 fi
 
 # script
