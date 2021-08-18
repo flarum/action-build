@@ -92,7 +92,7 @@ fi
 
 # Only commit if we choose to do so
 # Useful for validating that JS is syntactically valid
-if [[ "$DO_NOT_COMMIT" == "false" ]]; then
+if [[ "$INPUT_DO_NOT_COMMIT" == "false" ]]; then
   git add dist/* -f
 
   if [[ -z $(git status -uno --porcelain) ]]; then
