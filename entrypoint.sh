@@ -38,6 +38,10 @@ if [ -z "$INPUT_JS_PATH" ]; then
   INPUT_JS_PATH="./js"
 fi
 
+if [ -z "$DO_NOT_COMMIT" ]; then
+  DO_NOT_COMMIT="false"
+fi
+
 # script
 
 echo -e "$style - setting up git $reset"
@@ -86,31 +90,37 @@ else
   COMMIT_DESC="Includes transpiled JS/TS."
 fi
 
-git add dist/* -f
+# Only commit if we choose to do so
+# Useful for validating that JS is syntactically valid
+if [[ "$DO_NOT_COMMIT" == "false" ]]; then
+  git add dist/* -f
 
-if [[ -z $(git status -uno --porcelain) ]]; then
-  echo -e "$style - nothing to commit $reset"
-  exit
-fi
+  if [[ -z $(git status -uno --porcelain) ]]; then
+    echo -e "$style - nothing to commit $reset"
+    exit
+  fi
 
-echo -e "$style - committing and pushing $reset"
+  echo -e "$style - committing and pushing $reset"
 
-# Multiple `-m`s are treated as separate paragraphs by git.
-git commit -m "Bundled output for commit $GITHUB_SHA" -m "$COMMIT_DESC" -m "[skip ci]"
+  # Multiple `-m`s are treated as separate paragraphs by git.
+  git commit -m "Bundled output for commit $GITHUB_SHA" -m "$COMMIT_DESC" -m "[skip ci]"
 
-# no longer exit on error
-set +e
+  # no longer exit on error
+  set +e
 
-OUT="$(git push https://"$GITHUB_ACTOR":"$GITHUB_TOKEN"@github.com/"$GITHUB_REPOSITORY".git HEAD:"$GITHUB_REF" 2>&1 >/dev/null)"
+  OUT="$(git push https://"$GITHUB_ACTOR":"$GITHUB_TOKEN"@github.com/"$GITHUB_REPOSITORY".git HEAD:"$GITHUB_REF" 2>&1 >/dev/null)"
 
-if grep -q "the remote contains work that you do\|a pushed branch tip is behind its remote" <<<"$OUT"; then
-  echo -e "$style - HEAD is behind $reset"
-  exit
-elif grep -q "fatal:\|error:" <<<"$OUT"; then
-  echo -e "$style - error $reset"
-  echo "$OUT"
-  exit 1
+  if grep -q "the remote contains work that you do\|a pushed branch tip is behind its remote" <<<"$OUT"; then
+    echo -e "$style - HEAD is behind $reset"
+    exit
+  elif grep -q "fatal:\|error:" <<<"$OUT"; then
+    echo -e "$style - error $reset"
+    echo "$OUT"
+    exit 1
+  else
+    echo -e "$style - success $reset"
+    echo "$OUT"
+  fi
 else
-  echo -e "$style - success $reset"
-  echo "$OUT"
+  echo -e "$style - DO_NOT_COMMIT is true, so we won't commit these changes $reset"
 fi
