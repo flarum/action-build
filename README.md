@@ -24,6 +24,7 @@ jobs:
           typings_script: build-typings # npm run build-typings
           package_manager: npm # Use NPM, not Yarn
           js_path: ./js # JS located in `./js`
+          do_not_commit: false # Commit built JS by default
 ```
 
 ## Options
@@ -37,6 +38,7 @@ Here is a full list of options available using the `with` syntax:
 | `typings_script`  | No       | If defined, runs the script of this name in `package.json` to build typings for your extension.  | `build-typings`               | Unset   |
 | `package_manager` | No       | Either `yarn` or `npm`. Will install dependencies and build using the specified package manager. | `yarn`                        | `npm`   |
 | `js_path`         | No       | Path to your JS folder (where `package.json` is located) from the root of your repository.       | `./js`                        | `./js`  |
+| `do_not_commit`   | No       | Set to `true` to NOT commit the built JS/Typings. Useful for validating JS source.               | `false`                       | `false` |
 
 ### Assumptions
 
