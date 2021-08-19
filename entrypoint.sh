@@ -92,7 +92,9 @@ fi
 
 # Only commit if we choose to do so
 # Useful for validating that JS is syntactically valid
-if [[ "$INPUT_DO_NOT_COMMIT" == "false" ]]; then
+if [[ "$INPUT_DO_NOT_COMMIT" != "false" ]]; then
+  echo -e "$style - DO_NOT_COMMIT is true, so we won't commit these changes $reset"
+else
   git add dist/* -f
 
   if [[ -z $(git status -uno --porcelain) ]]; then
@@ -121,6 +123,4 @@ if [[ "$INPUT_DO_NOT_COMMIT" == "false" ]]; then
     echo -e "$style - success $reset"
     echo "$OUT"
   fi
-else
-  echo -e "$style - DO_NOT_COMMIT is true, so we won't commit these changes $reset"
 fi
