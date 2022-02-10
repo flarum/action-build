@@ -59,9 +59,11 @@ npm i -g npm@^7
 
 if [[ "$INPUT_PACKAGE_MANAGER" == "npm" ]]; then
   npm ci
+elif [[ "$INPUT_PACKAGE_MANAGER" == "pnpm" ]]; then
+  npm i -g pnpm
+  pnpm install --frozen-lockfile
 else
-  npm i -g $INPUT_PACKAGE_MANAGER
-  $INPUT_PACKAGE_MANAGER install --frozen-lockfile
+  yarn install --frozen-lockfile
 fi
 
 echo -e "$style - building Javascript/Typescript files $reset"
