@@ -59,12 +59,11 @@ npm i -g npm@^7
 
 if [[ "$INPUT_PACKAGE_MANAGER" == "npm" ]]; then
   npm ci
+elif [[ "$INPUT_PACKAGE_MANAGER" == "pnpm" ]]; then
+  npm i -g pnpm
+  pnpm install --frozen-lockfile
 else
-  # Yarn is usually installed as part of `actions/setup-node`
-  # so let's ignore any errors here.
-  set +e
-  npm i -g yarn
-  set -e
+  # Yarn has been included in Docker image.
   yarn install --frozen-lockfile
 fi
 
