@@ -2,8 +2,8 @@ name: Flarum JavaScript Build
 description: Automatically compile your extension's JavaScript files
 author: 'Flarum'
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: 'node16'
+  main: 'dist/index.js'
 inputs:
   github_token:
     description: 'Token used to push built JS code to your GitHub repository (if in doubt, use "(dollar-sign){{ secrets.GITHUB_TOKEN }}")'
