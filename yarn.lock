@@ -454,7 +454,9 @@ __metadata:
     "@actions/core": ^1.6.0
     "@actions/github": ^5.0.1
     "@flarum/prettier-config": ^1.0.0
+    "@npmcli/promise-spawn": ^3.0.0
     "@types/node": ^16.11.27
+    "@types/npm": ^7.19.0
     "@typescript-eslint/parser": ^5.20.0
     "@vercel/ncc": ^0.33.4
     eslint: ^8.13.0
@@ -794,6 +796,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@npmcli/promise-spawn@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@npmcli/promise-spawn@npm:3.0.0"
+  dependencies:
+    infer-owner: ^1.0.4
+  checksum: 3454465a2731cea5875ba51f80873e2205e5bd878c31517286b0ede4ea931c7bf3de895382287e906d03710fff6f9e44186bd0eee068ce578901c5d3b58e7692
+  languageName: node
+  linkType: hard
+
 "@octokit/auth-token@npm:^2.4.4":
   version: 2.5.0
   resolution: "@octokit/auth-token@npm:2.5.0"
@@ -1036,6 +1047,15 @@ __metadata:
   version: 16.11.27
   resolution: "@types/node@npm:16.11.27"
   checksum: 6ed0c8c4d29a549d0cfd607d19edf9a4668fbd39087701d923b4a04cd760564e47ad27f9403968cb9c11ee006f0ea6ab698b2491b4b2d2dec3f4a53d0fc22df7
+  languageName: node
+  linkType: hard
+
+"@types/npm@npm:^7.19.0":
+  version: 7.19.0
+  resolution: "@types/npm@npm:7.19.0"
+  dependencies:
+    "@types/node": "*"
+  checksum: db88dc44318a8a70cf92a06db72da3228685c8d01c00eb8edacd1abc21e7204d2e1661a9e2befb31522e35838abcfbc7a651afbc2a20f660e703f994ce617079
   languageName: node
   linkType: hard
 

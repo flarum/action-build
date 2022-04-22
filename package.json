@@ -22,12 +22,14 @@
   "dependencies": {
     "@actions/core": "^1.6.0",
     "@actions/github": "^5.0.1",
+    "@npmcli/promise-spawn": "^3.0.0",
     "fs-jetpack": "^4.3.1",
     "isomorphic-git": "^1.17.1"
   },
   "devDependencies": {
     "@flarum/prettier-config": "^1.0.0",
     "@types/node": "^16.11.27",
+    "@types/npm": "^7.19.0",
     "@typescript-eslint/parser": "^5.20.0",
     "@vercel/ncc": "^0.33.4",
     "eslint": "^8.13.0",

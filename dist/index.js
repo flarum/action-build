@@ -111,7 +111,7 @@ class JSPackageManagerInterop {
                 return;
             switch (this.packageManager) {
                 case 'pnpm':
-                    yield (0, exec_1.exec)('npm', ['install', '--global', 'pnpm']);
+                    yield (0, exec_1.exec)('npm', ['install', '--global', 'pnpm'], {});
                     break;
             }
             this.oneTimeSetupComplete = true;
@@ -172,15 +172,20 @@ exports.asyncArrayFilter = asyncArrayFilter;
 /***/ }),
 
 /***/ 6780:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.exec = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-const util_1 = __nccwpck_require__(3837);
-const exec = (0, util_1.promisify)(child_process_1.execFile);
+// @ts-expect-error
+const promise_spawn_1 = __importDefault(__nccwpck_require__(7905));
+function exec(cmd, args, opts = {}, extra) {
+    return (0, promise_spawn_1.default)(cmd, args, Object.assign(Object.assign({}, opts), { stdio: 'inherit' }), extra);
+}
 exports.exec = exec;
 
 
@@ -1855,6 +1860,88 @@ function checkBypass(reqUrl) {
     return false;
 }
 exports.checkBypass = checkBypass;
+
+
+/***/ }),
+
+/***/ 7905:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const { spawn } = __nccwpck_require__(2081)
+const inferOwner = __nccwpck_require__(5476)
+
+const isPipe = (stdio = 'pipe', fd) =>
+  stdio === 'pipe' || stdio === null ? true
+  : Array.isArray(stdio) ? isPipe(stdio[fd], fd)
+  : false
+
+// 'extra' object is for decorating the error a bit more
+const promiseSpawn = (cmd, args, opts = {}, extra = {}) => {
+  const cwd = opts.cwd || process.cwd()
+  const isRoot = process.getuid && process.getuid() === 0
+  const { uid, gid } = isRoot ? inferOwner.sync(cwd) : {}
+  return promiseSpawnUid(cmd, args, {
+    ...opts,
+    cwd,
+    uid,
+    gid,
+  }, extra)
+}
+
+const stdioResult = (stdout, stderr, { stdioString, stdio }) =>
+  stdioString ? {
+    stdout: isPipe(stdio, 1) ? Buffer.concat(stdout).toString() : null,
+    stderr: isPipe(stdio, 2) ? Buffer.concat(stderr).toString() : null,
+  }
+  : {
+    stdout: isPipe(stdio, 1) ? Buffer.concat(stdout) : null,
+    stderr: isPipe(stdio, 2) ? Buffer.concat(stderr) : null,
+  }
+
+const promiseSpawnUid = (cmd, args, opts, extra) => {
+  let proc
+  const p = new Promise((res, rej) => {
+    proc = spawn(cmd, args, opts)
+    const stdout = []
+    const stderr = []
+    const reject = er => rej(Object.assign(er, {
+      cmd,
+      args,
+      ...stdioResult(stdout, stderr, opts),
+      ...extra,
+    }))
+    proc.on('error', reject)
+    if (proc.stdout) {
+      proc.stdout.on('data', c => stdout.push(c)).on('error', reject)
+      proc.stdout.on('error', er => reject(er))
+    }
+    if (proc.stderr) {
+      proc.stderr.on('data', c => stderr.push(c)).on('error', reject)
+      proc.stderr.on('error', er => reject(er))
+    }
+    proc.on('close', (code, signal) => {
+      const result = {
+        cmd,
+        args,
+        code,
+        signal,
+        ...stdioResult(stdout, stderr, opts),
+        ...extra,
+      }
+      if (code || signal) {
+        rej(Object.assign(new Error('command failed'), result))
+      } else {
+        res(result)
+      }
+    })
+  })
+
+  p.stdin = proc.stdin
+  p.process = proc
+  return p
+}
+
+module.exports = promiseSpawn
 
 
 /***/ }),
@@ -7708,6 +7795,84 @@ GlobSync.prototype._mark = function (p) {
 
 GlobSync.prototype._makeAbs = function (f) {
   return common.makeAbs(this, f)
+}
+
+
+/***/ }),
+
+/***/ 5476:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const cache = new Map()
+const fs = __nccwpck_require__(7147)
+const { dirname, resolve } = __nccwpck_require__(1017)
+
+
+const lstat = path => new Promise((res, rej) =>
+  fs.lstat(path, (er, st) => er ? rej(er) : res(st)))
+
+const inferOwner = path => {
+  path = resolve(path)
+  if (cache.has(path))
+    return Promise.resolve(cache.get(path))
+
+  const statThen = st => {
+    const { uid, gid } = st
+    cache.set(path, { uid, gid })
+    return { uid, gid }
+  }
+  const parent = dirname(path)
+  const parentTrap = parent === path ? null : er => {
+    return inferOwner(parent).then((owner) => {
+      cache.set(path, owner)
+      return owner
+    })
+  }
+  return lstat(path).then(statThen, parentTrap)
+}
+
+const inferOwnerSync = path => {
+  path = resolve(path)
+  if (cache.has(path))
+    return cache.get(path)
+
+  const parent = dirname(path)
+
+  // avoid obscuring call site by re-throwing
+  // "catch" the error by returning from a finally,
+  // only if we're not at the root, and the parent call works.
+  let threw = true
+  try {
+    const st = fs.lstatSync(path)
+    threw = false
+    const { uid, gid } = st
+    cache.set(path, { uid, gid })
+    return { uid, gid }
+  } finally {
+    if (threw && parent !== path) {
+      const owner = inferOwnerSync(parent)
+      cache.set(path, owner)
+      return owner // eslint-disable-line no-unsafe-finally
+    }
+  }
+}
+
+const inflight = new Map()
+module.exports = path => {
+  path = resolve(path)
+  if (inflight.has(path))
+    return Promise.resolve(inflight.get(path))
+  const p = inferOwner(path).then(owner => {
+    inflight.delete(path)
+    return owner
+  })
+  inflight.set(path, p)
+  return p
+}
+module.exports.sync = inferOwnerSync
+module.exports.clearCache = () => {
+  cache.clear()
+  inflight.clear()
 }
 
 

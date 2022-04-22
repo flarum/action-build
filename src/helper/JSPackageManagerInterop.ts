@@ -98,7 +98,7 @@ export default class JSPackageManagerInterop {
 
     switch (this.packageManager) {
       case 'pnpm':
-        await __external_exec('npm', ['install', '--global', 'pnpm']);
+        await __external_exec('npm', ['install', '--global', 'pnpm'], {});
         break;
     }
 
