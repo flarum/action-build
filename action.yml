@@ -6,7 +6,7 @@ runs:
   image: "Dockerfile"
 inputs:
   github_token:
-    description: Token used to push built JS code to your GitHub repository (if in doubt, use "${{ secrets.GITHUB_TOKEN }}")
+    description: Token used to push built JS code to your GitHub repository (if in doubt, use "\${{ secrets.GITHUB_TOKEN }}")
     required: true
   build_script:
     description: The name of the package.json script to run to build your JS code
