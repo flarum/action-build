@@ -1,29 +1,29 @@
 name: Flarum JavaScript Build
 description: Automatically compile your extension's JavaScript files
-author: "Flarum"
+author: 'Flarum'
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: 'docker'
+  image: 'Dockerfile'
 inputs:
   github_token:
-    description: Token used to push built JS code to your GitHub repository (if in doubt, use "\${{ secrets.GITHUB_TOKEN }}")
+    description: 'Token used to push built JS code to your GitHub repository (if in doubt, use "${{ secrets.GITHUB_TOKEN }}")'
     required: true
   build_script:
     description: The name of the package.json script to run to build your JS code
-    default: "build"
+    default: 'build'
     required: true
   typings_script:
     description: (If needed) The name of the package.json script to run to compile your Typescript typings
     required: false
   package_manager:
     description: Name of your JS package manager (either npm or yarn)
-    default: "npm"
+    default: 'npm'
     required: false
   js_path:
     description: Path to your Javascript folder from the root of your repository (e.g. ./js)
-    default: "./js"
+    default: './js'
     required: false
   do_not_commit:
     description: When true, prevents committing compiled code and typings to your repository.
-    default: "false"
+    default: 'false'
     required: false
