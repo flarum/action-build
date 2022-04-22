@@ -6,8 +6,9 @@ export default async function isDirectoryFlarumExtension(pathFromRoot: string): 
   if (composerJson === undefined) return false;
 
   if (composerJson.type === 'flarum-extension') return true;
+  
   // Special case for monorepo
-  else if (composerJson.name === 'flarum/core') return true;
+  if (composerJson.name === 'flarum/core') return true;
 
   return false;
 }
