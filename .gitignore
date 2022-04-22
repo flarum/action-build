@@ -6,3 +6,6 @@
 !.yarn/sdks
 !.yarn/versions
 node_modules/
+
+# In-between transpilation step
+lib/
