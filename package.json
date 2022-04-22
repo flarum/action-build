@@ -12,7 +12,7 @@
     "lint": "eslint src/**/*.ts",
     "package": "ncc build --source-map --license licenses.txt",
     "test": "jest",
-    "all": "npm run build && npm run format && npm run lint && npm run package && npm test"
+    "all": "yarn run build && yarn run format && yarn run lint && yarn run package && yarn test"
   },
   "repository": {
     "type": "git",
@@ -23,7 +23,7 @@
     "@actions/core": "^1.6.0",
     "@actions/github": "^5.0.1",
     "fs-jetpack": "^4.3.1",
-    "nodegit": "^0.27.0"
+    "isomorphic-git": "^1.17.1"
   },
   "devDependencies": {
     "@flarum/prettier-config": "^1.0.0",
