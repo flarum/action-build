@@ -1,5 +1,7 @@
 import jetpack from 'fs-jetpack';
+import { debuglog } from 'util';
 import { asyncArrayFilter } from '../helper/asyncFilter';
+import { debugLog, log } from '../helper/log';
 import runCiJobs from '../runCiJobs';
 import isDirectoryFlarumExtension from './isDirectoryFlarumExtension';
 
@@ -32,10 +34,15 @@ interface IPackageInfoWithPath extends IPackageInfo {
  * has handled JS actions, `false` otherwise.
  */
 export async function handleFlarumMonorepo(): Promise<boolean> {
+  debugLog('** Checking for Flarum monorepo...');
+
   const monorepoJson: MonorepoJsonContent | undefined = await jetpack.readAsync('flarum-monorepo.json', 'json');
 
   // `undefined` means the file was not found
-  if (monorepoJson === undefined) return false;
+  if (monorepoJson === undefined) {
+    debugLog(`** flarum-monorepo.json not found!`);
+    return false;
+  }
 
   const repositories =
     monorepoJson.packages.extensions?.map((extension) => ({
@@ -45,6 +52,7 @@ export async function handleFlarumMonorepo(): Promise<boolean> {
 
   // Special case for core
   if (monorepoJson.packages.core) {
+    debugLog(`** Handling special case for flarum-core...`);
     repositories.push({
       ...monorepoJson.packages.core,
       pathToDir: './framework/core',
@@ -52,13 +60,23 @@ export async function handleFlarumMonorepo(): Promise<boolean> {
   }
 
   if (repositories.length === 0) return false;
+  debugLog(`** Packages found in monorepo!`);
 
   const filteredRepositories = await asyncArrayFilter(repositories, async (repository) => await isDirectoryFlarumExtension(repository.pathToDir));
 
   if (filteredRepositories.length === 0) return false;
+  debugLog(`** Determined >=1 package is a valid Flarum extension!`);
+
+  log(`-- Flarum monorepo detected!`);
+  log(`-- Running CI for ${filteredRepositories.length} package(s)`);
+
+  debugLog(`** Running CI for:`);
+  filteredRepositories.forEach((r) => {
+    debuglog(`**  - ${r.name} (${r.pathToDir})`);
+  });
 
   // Run the CI jobs for each repository in parallel and wait for completion
-  await Promise.all(filteredRepositories.map((repository) => runCiJobs(repository.pathToDir)));
+  await Promise.all(filteredRepositories.map((repository) => runCiJobs(repository.pathToDir, true)));
 
   return true;
 }
