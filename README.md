@@ -23,7 +23,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           build_script: build # npm run build
-          typings_script: build-typings # npm run build-typings
+          build_typings_script: build-typings # npm run build-typings
           package_manager: npm # Use NPM, not Yarn
           js_path: ./js # JS located in `./js`
           do_not_commit: false # Commit built JS by default
@@ -33,16 +33,19 @@ jobs:
 
 Here is a full list of options available using the `with` syntax:
 
-| Name              | Required | Description                                                                                                 | Example                       | Default |
-| ----------------- | -------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
-| `github_token`    | Yes      | Your Actions GitHub token. The example value should work for this by default.                               | `${{ secrets.GITHUB_TOKEN }}` | None    |
-| `build_script`    | Yes      | The `package.json` script to run to build your extension JS.                                                | `build`                       | `build` |
-| `typings_script`  | No       | If defined, runs the script of this name in `package.json` to build typings for your extension.             | `build-typings`               | Unset   |
-| `format_script`   | No       | If defined, runs the script of this name in `package.json` to check code formatting of your extension's JS. | `format-check`                | Unset   |
-| `package_manager` | No       | Either `yarn` or `npm` or `pnpm`. Will install dependencies and build using the specified package manager.  | `yarn`                        | `npm`   |
-| `js_path`         | No       | Path to your JS folder (where `package.json` is located) from the root of your repository.                  | `./js`                        | `./js`  |
-| `do_not_commit`   | No       | Set to `true` to NOT commit the built JS/Typings. Useful for validating JS source.                          | `false`                       | `false` |
-| `commit_all_dirty`| No       | Set to `true` to commit all file changes, not just files in the dist JS directory.               | `false`                       | `false` |
+| Name                   | Required | Description                                                                                                             | Example                       | Default |
+|------------------------| -------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
+| `github_token`         | Yes      | Your Actions GitHub token. The example value should work for this by default.                                           | `${{ secrets.GITHUB_TOKEN }}` | None    |
+| `build_script`         | Yes      | The `package.json` script to run to build your extension JS.                                                            | `build`                       | `build` |
+| `build_typings_script` | No       | If defined, runs the script of this name in `package.json` to build typings for your extension.                         | `build-typings`               | Unset   |
+| `format_script`        | No       | If defined, runs the script of this name in `package.json` to check code formatting of your extension's JS.             | `format-check`                | Unset   |
+| `check_typings_script` | No       | If defined, runs the script of this name in `package.json` to typecheck your extension's TypeScript code.               | `check-typings`               | Unset   |
+| `type_coverage_script` | No       | If defined, runs the script of this name in `package.json` to assess type coverage in your extension's TypeScript code. | `check-typings-coverage`      | Unset   |
+| `package_manager`      | No       | Either `yarn` or `npm` or `pnpm`. Will install dependencies and build using the specified package manager.              | `yarn`                        | `npm`   |
+| `js_path`              | No       | Path to your JS folder (where `package.json` is located) from the root of your repository.                              | `./js`                        | `./js`  |
+| `do_not_commit`        | No       | Set to `true` to NOT commit the built JS/Typings. Useful for validating JS source.                                      | `false`                       | `false` |
+| `checks`               | No       | An array of strings, where each is a script that should be run before committing built js.                              | `false`                       | `false` |
+| `commit_all_dirty`     | No       | Set to `true` to commit all file changes, not just files in the dist JS directory.               | `false`                       | `false` |
 
 ### Assumptions
 

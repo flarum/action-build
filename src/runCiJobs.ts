@@ -7,6 +7,10 @@ import runBuildScript from './jobs/runBuildScript';
 import runBuildTypingsScript from './jobs/runBuildTypingsScript';
 import runFormatCheckScript from './jobs/runFormatCheckScript';
 import commitChangesToGit from './jobs/commitChangesToGit';
+import runCheckTypingsScript from './jobs/runCheckTypingsScript';
+import runTypingCoverageScript from './jobs/runTypingCoverageScript';
+
+type RunOptions = {noPrepare?: boolean, noPreBuildChecks?: boolean, noBuild?: boolean, noPostBuildChecks?: boolean, noCommit?: boolean}
 
 /**
  * Automatically detect and run the appropriate CI jobs for the current repository.
@@ -14,16 +18,28 @@ import commitChangesToGit from './jobs/commitChangesToGit';
  * Pass a custom path as the first parameter to run the CI jobs for a specific
  * subdirectory of the repository (useful for monorepo).
  */
-export default async function runCiJobs(path: string = './', forceNoCommit: boolean = false) {
+export default async function runCiJobs(path = './', {noPrepare, noPreBuildChecks, noBuild, noPostBuildChecks, noCommit}: RunOptions = {}): Promise<void> {
   log(`-- Beginning CI jobs...`);
   debugLog(`** Running CI jobs in \`${path}\``);
 
   const jp = jetpack.cwd(path);
   const pm = new JSPackageManagerInterop(path);
 
-  await installJsDependencies(pm);
-  await runFormatCheckScript(pm);
-  await runBuildTypingsScript(pm);
-  await runBuildScript(pm);
-  !forceNoCommit && (await commitChangesToGit(jp));
+  if (!noPrepare) {
+    await installJsDependencies(pm);
+  }
+  if (!noPreBuildChecks) {
+    await runFormatCheckScript(pm);
+    await runTypingCoverageScript(pm);
+  }
+  if (!noBuild) {
+    await runBuildTypingsScript(pm);
+    await runBuildScript(pm);
+  }
+  if (!noPostBuildChecks) {
+    await runCheckTypingsScript(pm);
+  }
+  if (!noCommit) {
+    await commitChangesToGit(jp);
+  }
 }

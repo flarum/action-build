@@ -2,6 +2,7 @@ import jetpack from 'fs-jetpack';
 import { debuglog } from 'util';
 import { asyncArrayFilter } from '../helper/asyncFilter';
 import { debugLog, log } from '../helper/log';
+import commitChangesToGit from '../jobs/commitChangesToGit';
 import runCiJobs from '../runCiJobs';
 import isDirectoryFlarumExtension from './isDirectoryFlarumExtension';
 
@@ -76,7 +77,9 @@ export async function handleFlarumMonorepo(): Promise<boolean> {
   });
 
   // Run the CI jobs for each repository in parallel and wait for completion
-  await Promise.all(filteredRepositories.map((repository) => runCiJobs(repository.pathToDir, true)));
+  await Promise.all(filteredRepositories.map((repository) => runCiJobs(repository.pathToDir, {noPostBuildChecks: true, noCommit: true})));
+  await Promise.all(filteredRepositories.map((repository) => runCiJobs(repository.pathToDir, {noPrepare: true, noPreBuildChecks: true, noBuild: true, noCommit: true})));
+  await commitChangesToGit(jetpack.cwd('./'));
 
   return true;
 }

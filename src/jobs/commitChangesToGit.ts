@@ -44,7 +44,7 @@ export default async function commitChangesToGit(jp: FSJetpack): Promise<void> {
   await git.commit({
     ...repo,
     message: `Bundled output for commit \`${lastCommitHash}\`
-Includes transpiled JS/TS${core.getInput('typings_script') !== '' ? ', and Typescript declaration files (typings)' : ''}.
+Includes transpiled JS/TS${core.getInput('build_typings_script') !== '' ? ', and Typescript declaration files (typings)' : ''}.
 
 [skip ci]`,
   });

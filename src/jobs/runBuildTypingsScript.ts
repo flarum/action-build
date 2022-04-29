@@ -8,7 +8,7 @@ import { debugLog, log } from '../helper/log';
  * is enabled.
  */
 export default async function runBuildTypingsScript(packageManager: JSPackageManagerInterop): Promise<void> {
-  const buildTypingsScript = core.getInput('typings_script');
+  const buildTypingsScript = core.getInput('build_typings_script');
   if (buildTypingsScript === '') {
     debugLog(`** Skipping typings build script`);
     return;
