@@ -42,6 +42,10 @@ if [ -z "$INPUT_DO_NOT_COMMIT" ]; then
   INPUT_DO_NOT_COMMIT="false"
 fi
 
+if [ -z "$INPUT_COMMIT_ALL_DIRTY" ]; then
+  INPUT_COMMIT_ALL_DIRTY="false"
+fi
+
 # script
 
 echo -e "$style - setting up git $reset"
@@ -94,7 +98,11 @@ fi
 if [[ "$INPUT_DO_NOT_COMMIT" != "false" ]]; then
   echo -e "$style - DO_NOT_COMMIT is true, so we won't commit these changes $reset"
 else
-  git add dist/* -f
+  if [[ "$INPUT_COMMIT_ALL_DIRTY" != "false" ]]; then
+    git add . -f
+  else
+    git add dist/* -f
+  fi
 
   if [[ -z $(git status -uno --porcelain) ]]; then
     echo -e "$style - nothing to commit $reset"
