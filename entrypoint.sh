@@ -99,10 +99,10 @@ if [[ "$INPUT_DO_NOT_COMMIT" != "false" ]]; then
   echo -e "$style - DO_NOT_COMMIT is true, so we won't commit these changes $reset"
 else
   if [[ "$INPUT_COMMIT_ALL_DIRTY" != "false" ]]; then
-    git add . -f
-  else
-    git add dist/* -f
+    git add -A
   fi
+
+  git add dist/* -f
 
   if [[ -z $(git status -uno --porcelain) ]]; then
     echo -e "$style - nothing to commit $reset"
