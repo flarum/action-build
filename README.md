@@ -25,6 +25,7 @@ jobs:
           package_manager: npm # Use NPM, not Yarn
           js_path: ./js # JS located in `./js`
           do_not_commit: false # Commit built JS by default
+          commit_all_dirty: false
 ```
 
 ## Options
