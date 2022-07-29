@@ -29,7 +29,7 @@ export default class JSPackageManagerInterop {
   /**
    * Absolute path to the JS root folder.
    */
-  private readonly pathToJsFolder: string;
+  private pathToJsFolder: string;
 
   private oneTimeSetupComplete: boolean = false;
 
@@ -121,5 +121,17 @@ export default class JSPackageManagerInterop {
    */
   private exec(options: string[]) {
     return __external_exec(this.packageManager, options, { cwd: this.pathToJsFolder });
+  }
+
+  /**
+   * Parses `package.json` and returns an object.
+   */
+  public async getPackageJson(): Promise<any> {
+    const monorepo = !jetpack.exists(this.pathToJsFolder + '/package.json');
+
+    // This is needed for a monorepo context.
+    if (monorepo) this.pathToJsFolder = path.resolve(jetpack.cwd(), jetpack.path(this.extensionRoot, './js'));
+
+    return await jetpack.readAsync(this.pathToJsFolder + '/package.json', 'json');
   }
 }

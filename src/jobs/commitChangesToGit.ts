@@ -1,8 +1,7 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
 
-import git, { GitAuth } from 'isomorphic-git';
-import * as http from 'isomorphic-git/http/node';
+import simpleGit, { SimpleGitOptions } from 'simple-git';
 
 import { debugLog, log } from '../helper/log';
 
@@ -14,50 +13,48 @@ import type { FSJetpack } from 'fs-jetpack/types';
 export default async function commitChangesToGit(jp: FSJetpack): Promise<void> {
   log(`-- Commiting changes to Git...`);
 
-  /**
-   * Significantly improves performance during git IO operations
-   *
-   * @see https://isomorphic-git.org/docs/en/cache
-   */
-  let gitCache = {};
-
-  const repo = {
-    fs,
-    dir: jp.cwd(),
-    cache: gitCache,
+  const options: Partial<SimpleGitOptions> = {
+    baseDir: jp.cwd(),
+    maxConcurrentProcesses: 1,
   };
 
-  debugLog(`** Staging all changes`);
-  // Equivalent of `git add -A .`
-  // https://isomorphic-git.org/docs/en/snippets#git-add-a-
-  await git
-    .statusMatrix(repo)
-    .then((status) =>
-      Promise.all(status.map(([filepath, , worktreeStatus]) => (worktreeStatus ? git.add({ ...repo, filepath }) : git.remove({ ...repo, filepath }))))
-    );
+  const config = {
+    author: {
+      name: 'flarum-bot',
+      email: 'bot@flarum.org',
+    },
+  };
 
-  const commits = await git.log({ ...repo, depth: 1 });
-  const lastCommit = commits[0];
-  const lastCommitHash = lastCommit?.oid ?? '';
+  const git = simpleGit(options);
+
+  await git.addConfig('user.name', config.author.name).addConfig('user.email', config.author.email);
+
+  debugLog(`** Staging all changes`);
+
+  if (core.getInput('commit_all_dirty') !== '') await git.add(['./*', '-A']);
+
+  await git.add(['*/*/js/dist-typings/*', '-f']);
+  await git.add(['*/*/js/dist/*', '-f']);
+
+  const hash = process.env.GITHUB_SHA;
 
   debugLog(`** Committing staged changes`);
-  await git.commit({
-    ...repo,
-    message: `Bundled output for commit \`${lastCommitHash}\`
+  await git.commit(`Bundled output for commit ${hash}
 Includes transpiled JS/TS${core.getInput('build_typings_script') !== '' ? ', and Typescript declaration files (typings)' : ''}.
 
-[skip ci]`,
-  });
+[skip ci]`);
+
+  const token = core.getInput('github_token', { required: true, trimWhitespace: true });
 
   debugLog(`** Pushing commit`);
-  await git.push({
-    ...repo,
-    http,
-    onAuth: () => ({
-      username: core.getInput('github_token', { required: true, trimWhitespace: true }),
-    }),
-  });
 
-  // Force cache garbage collection
-  gitCache = {};
+  await git.addRemote('upstream', `https://${process.env.GITHUB_ACTOR}:${token}@github.com/${process.env.GITHUB_REPOSITORY}.git`);
+
+  const status = await git.status();
+
+  log(`${status}`);
+
+  await git.push(`upstream`);
+
+  log(`-- Pushed commit ${hash}`);
 }

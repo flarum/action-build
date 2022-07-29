@@ -77,8 +77,16 @@ export async function handleFlarumMonorepo(): Promise<boolean> {
   });
 
   // Run the CI jobs for each repository in parallel and wait for completion
-  await Promise.all(filteredRepositories.map((repository) => runCiJobs(repository.pathToDir, {noPostBuildChecks: true, noCommit: true})));
-  await Promise.all(filteredRepositories.map((repository) => runCiJobs(repository.pathToDir, {noPrepare: true, noPreBuildChecks: true, noBuild: true, noCommit: true})));
+  await Promise.all(
+    filteredRepositories.map((repository) =>
+      runCiJobs(repository.pathToDir, { noPostBuildChecks: true, noCommit: true, packageName: repository.name })
+    )
+  );
+  await Promise.all(
+    filteredRepositories.map((repository) =>
+      runCiJobs(repository.pathToDir, { noPrepare: true, noPreBuildChecks: true, noBuild: true, noCommit: true, packageName: repository.name })
+    )
+  );
   await commitChangesToGit(jetpack.cwd('./'));
 
   return true;

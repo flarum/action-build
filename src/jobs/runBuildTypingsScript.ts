@@ -2,18 +2,23 @@ import * as core from '@actions/core';
 
 import type JSPackageManagerInterop from '../helper/JSPackageManagerInterop';
 import { debugLog, log } from '../helper/log';
+import canRunScript from '../helper/canRunScript';
 
 /**
  * Runs build typings script using the selected package manager, if the feature
  * is enabled.
  */
-export default async function runBuildTypingsScript(packageManager: JSPackageManagerInterop): Promise<void> {
+export default async function runBuildTypingsScript(packageManager: JSPackageManagerInterop, packageJson: any): Promise<void> {
   const buildTypingsScript = core.getInput('build_typings_script');
-  if (buildTypingsScript === '') {
-    debugLog(`** Skipping typings build script`);
+
+  if (!canRunScript(buildTypingsScript, packageJson)) {
+    debugLog(`** [${packageJson.name || '-'}] Skipping typings build script`);
     return;
   }
 
-  log(`-- Running Typescript typings build script...`);
-  await packageManager.runPackageScript(buildTypingsScript);
+  log(`-- [${packageJson.name || '-'}] Running Typescript typings build script...`);
+  await packageManager.runPackageScript(buildTypingsScript).catch((error) => {
+    // Typings build often has errors -- let's not exit if we have any issues
+    core.warning(`Error running typings build script: ${error}`);
+  });
 }
