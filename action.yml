@@ -36,3 +36,7 @@ inputs:
     description: When true, prevents committing compiled code and typings to your repository.
     default: 'false'
     required: false
+  commit_all_dirty:
+    description: Set to `true` to commit all file changes, not just files in the dist JS directory.
+    default: false
+    required: false
