@@ -2,5 +2,41 @@ name: Flarum JavaScript Build
 description: Automatically compile your extension's JavaScript files
 author: 'Flarum'
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: 'node16'
+  main: 'dist/index.js'
+inputs:
+  github_token:
+    description: 'Token used to push built JS code to your GitHub repository (if in doubt, use "(dollar-sign){{ secrets.GITHUB_TOKEN }}")'
+    required: true
+  build_script:
+    description: The name of the package.json script to run to build your JS code
+    default: 'build'
+    required: true
+  build_typings_script:
+    description: (If needed) The name of the package.json script to run to compile your Typescript typings
+    required: false
+  format_script:
+    description: (If needed) The name of the package.json script to run to check code formatting
+    required: false
+  check_typings_script:
+    description: (If needed) The name of the package.json script to run to typecheck your TypeScript code
+    required: false
+  type_coverage_script:
+    description: (If needed) The name of the package.json script to run to assess TypeScript type coverage
+    required: false
+  package_manager:
+    description: Name of your JS package manager (either npm or yarn)
+    default: 'npm'
+    required: false
+  js_path:
+    description: Path to your Javascript folder from the root of your repository (e.g. ./js)
+    default: './js'
+    required: false
+  do_not_commit:
+    description: When true, prevents committing compiled code and typings to your repository.
+    default: 'false'
+    required: false
+  commit_all_dirty:
+    description: Set to `true` to commit all file changes, not just files in the dist JS directory.
+    default: false
+    required: false
