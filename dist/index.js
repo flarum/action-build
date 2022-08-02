@@ -84,15 +84,25 @@ class JSPackageManagerInterop {
      *
      * @param script Name of the `package.json` script to run.
      * @param options Any options to pass to the script.
+     * @param { exitOnError }
      */
-    runPackageScript(script, options) {
+    runPackageScript(script, options, { exitOnError = true } = {}) {
         return __awaiter(this, void 0, void 0, function* () {
             this.performOneTimeSetup();
             switch (this.packageManager) {
                 case 'yarn':
                 case 'pnpm':
                 case 'npm':
-                    yield this.exec(['run', script, ...(options !== null && options !== void 0 ? options : [])]);
+                    const promise = this.exec(['run', script, ...(options !== null && options !== void 0 ? options : [])]);
+                    promise.catch((error) => {
+                        if (!exitOnError) {
+                            core.warning(`Error running (${script}) script: ${error}`);
+                        }
+                        else {
+                            core.error(`Error running (${script}) script: ${error}`);
+                        }
+                    });
+                    yield promise;
                     break;
             }
         });
@@ -483,10 +493,8 @@ function runBuildTypingsScript(packageManager, packageJson) {
             return;
         }
         (0, log_1.log)(`-- [${packageJson.name || '-'}] Running Typescript typings build script...`);
-        yield packageManager.runPackageScript(buildTypingsScript).catch((error) => {
-            // Typings build often has errors -- let's not exit if we have any issues
-            core.warning(`Error running typings build script: ${error}`);
-        });
+        // Typings build often has errors -- let's not exit if we have any issues
+        yield packageManager.runPackageScript(buildTypingsScript, [], { exitOnError: false });
     });
 }
 exports["default"] = runBuildTypingsScript;

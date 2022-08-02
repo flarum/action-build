@@ -72,15 +72,26 @@ export default class JSPackageManagerInterop {
    *
    * @param script Name of the `package.json` script to run.
    * @param options Any options to pass to the script.
+   * @param { exitOnError }
    */
-  async runPackageScript(script: string, options?: string[]) {
+  async runPackageScript(script: string, options?: string[], { exitOnError = true } = {}) {
     this.performOneTimeSetup();
 
     switch (this.packageManager) {
       case 'yarn':
       case 'pnpm':
       case 'npm':
-        await this.exec(['run', script, ...(options ?? [])]);
+        const promise = this.exec(['run', script, ...(options ?? [])]);
+
+        promise.catch((error) => {
+          if (!exitOnError) {
+            core.warning(`Error running (${script}) script: ${error}`);
+          } else {
+            core.error(`Error running (${script}) script: ${error}`);
+          }
+        });
+
+        await promise;
         break;
     }
   }

@@ -17,8 +17,6 @@ export default async function runBuildTypingsScript(packageManager: JSPackageMan
   }
 
   log(`-- [${packageJson.name || '-'}] Running Typescript typings build script...`);
-  await packageManager.runPackageScript(buildTypingsScript).catch((error) => {
-    // Typings build often has errors -- let's not exit if we have any issues
-    core.warning(`Error running typings build script: ${error}`);
-  });
+  // Typings build often has errors -- let's not exit if we have any issues
+  await packageManager.runPackageScript(buildTypingsScript, [], { exitOnError: false });
 }
