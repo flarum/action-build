@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import jetpack from 'fs-jetpack';
 import path from 'path';
 import { exec as __external_exec } from './exec';
+import { debugLog } from './log';
 
 export default class JSPackageManagerInterop {
   static readonly SupportedPackageManagers = ['yarn', 'npm', 'pnpm'];
@@ -81,17 +82,20 @@ export default class JSPackageManagerInterop {
       case 'yarn':
       case 'pnpm':
       case 'npm':
-        const promise = this.exec(['run', script, ...(options ?? [])]);
+        const extensionName = this.extensionRoot.split('/').pop();
+        const errorMessage = `[${extensionName}] Failed running (${script})`;
 
-        promise.catch((error) => {
-          if (!exitOnError) {
-            core.warning(`Error running (${script}) script: ${error}`);
-          } else {
-            core.error(`Error running (${script}) script: ${error}`);
-          }
+        const result = await this.exec(['run', script, ...(options ?? [])]).catch((error) => {
+          if (exitOnError) {
+            debugLog(error);
+            core.setFailed(errorMessage);
+          } else core.warning(errorMessage);
         });
 
-        await promise;
+        debugLog(`** [${extensionName}] Result of (${script}): ${(result && result.code) || 'unknown'}`);
+
+        if (!result || result.code !== 0) debugLog(`** [${extensionName}] Failed running (${script})`);
+
         break;
     }
   }

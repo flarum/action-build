@@ -46,6 +46,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const fs_jetpack_1 = __importDefault(__nccwpck_require__(4610));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const exec_1 = __nccwpck_require__(6780);
+const log_1 = __nccwpck_require__(6644);
 class JSPackageManagerInterop {
     constructor(extensionRoot, packageManager, jsDirectory) {
         var _a;
@@ -93,16 +94,19 @@ class JSPackageManagerInterop {
                 case 'yarn':
                 case 'pnpm':
                 case 'npm':
-                    const promise = this.exec(['run', script, ...(options !== null && options !== void 0 ? options : [])]);
-                    promise.catch((error) => {
-                        if (!exitOnError) {
-                            core.warning(`Error running (${script}) script: ${error}`);
+                    const extensionName = this.extensionRoot.split('/').pop();
+                    const errorMessage = `[${extensionName}] Failed running (${script})`;
+                    const result = yield this.exec(['run', script, ...(options !== null && options !== void 0 ? options : [])]).catch(error => {
+                        if (exitOnError) {
+                            (0, log_1.debugLog)(error);
+                            core.setFailed(errorMessage);
                         }
-                        else {
-                            core.error(`Error running (${script}) script: ${error}`);
-                        }
+                        else
+                            core.warning(errorMessage);
                     });
-                    yield promise;
+                    (0, log_1.debugLog)(`** [${extensionName}] Result of (${script}): ${result && result.code || 'unknown'}`);
+                    if (!result || result.code !== 0)
+                        (0, log_1.debugLog)(`** [${extensionName}] Failed running (${script})`);
                     break;
             }
         });
