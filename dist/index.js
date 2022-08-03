@@ -96,7 +96,7 @@ class JSPackageManagerInterop {
                 case 'npm':
                     const extensionName = this.extensionRoot.split('/').pop();
                     const errorMessage = `[${extensionName}] Failed running (${script})`;
-                    const result = yield this.exec(['run', script, ...(options !== null && options !== void 0 ? options : [])]).catch(error => {
+                    const result = yield this.exec(['run', script, ...(options !== null && options !== void 0 ? options : [])]).catch((error) => {
                         if (exitOnError) {
                             (0, log_1.debugLog)(error);
                             core.setFailed(errorMessage);
@@ -104,7 +104,7 @@ class JSPackageManagerInterop {
                         else
                             core.warning(errorMessage);
                     });
-                    (0, log_1.debugLog)(`** [${extensionName}] Result of (${script}): ${result && result.code || 'unknown'}`);
+                    (0, log_1.debugLog)(`** [${extensionName}] Result of (${script}): ${(result && result.code) || 'unknown'}`);
                     if (!result || result.code !== 0)
                         (0, log_1.debugLog)(`** [${extensionName}] Failed running (${script})`);
                     break;
@@ -310,6 +310,9 @@ const log_1 = __nccwpck_require__(6644);
  */
 function commitChangesToGit(jp) {
     return __awaiter(this, void 0, void 0, function* () {
+        const doNotCommit = core.getInput('do_not_commit');
+        if (doNotCommit)
+            return;
         (0, log_1.log)(`-- Commiting changes to Git...`);
         const options = {
             baseDir: jp.cwd(),
