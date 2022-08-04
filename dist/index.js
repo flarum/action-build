@@ -310,7 +310,8 @@ const log_1 = __nccwpck_require__(6644);
  */
 function commitChangesToGit(jp) {
     return __awaiter(this, void 0, void 0, function* () {
-        const doNotCommit = core.getInput('do_not_commit');
+        const doNotCommit = core.getInput('do_not_commit') === 'true';
+        core.notice(doNotCommit ? 'Not committing changes to Git' : 'Committing changes to Git');
         if (doNotCommit)
             return;
         (0, log_1.log)(`-- Commiting changes to Git...`);

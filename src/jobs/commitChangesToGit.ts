@@ -11,7 +11,9 @@ import type { FSJetpack } from 'fs-jetpack/types';
  * Commits and pushes all Git changes.
  */
 export default async function commitChangesToGit(jp: FSJetpack): Promise<void> {
-  const doNotCommit = core.getInput('do_not_commit');
+  const doNotCommit = core.getInput('do_not_commit') === 'true';
+
+  core.notice(doNotCommit ? 'Not committing changes to Git' : 'Committing changes to Git');
 
   if (doNotCommit) return;
 
