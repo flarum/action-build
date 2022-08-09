@@ -39,8 +39,13 @@ export default async function commitChangesToGit(jp: FSJetpack): Promise<void> {
 
   if (core.getInput('commit_all_dirty') === 'true') await git.add(['-A']);
 
-  await git.add(['*/*/js/dist-typings/*']);
-  await git.add(['*/*/js/dist/*']);
+  // For monorepos
+  await git.add(["':(glob)**/*/js/dist-typings/*'"]);
+  await git.add(["':(glob)**/*/js/dist/*'"]);
+
+  // For non-monorepos
+  await git.add(['dist/*']);
+  await git.add(['dist-typings/*']);
 
   const hash = process.env.GITHUB_SHA;
 

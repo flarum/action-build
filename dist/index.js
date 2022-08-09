@@ -330,8 +330,12 @@ function commitChangesToGit(jp) {
         (0, log_1.debugLog)(`** Staging all changes`);
         if (core.getInput('commit_all_dirty') === 'true')
             yield git.add(['-A']);
-        yield git.add(['*/*/js/dist-typings/*']);
-        yield git.add(['*/*/js/dist/*']);
+        // For monorepos
+        yield git.add(["':(glob)**/*/js/dist-typings/*'"]);
+        yield git.add(["':(glob)**/*/js/dist/*'"]);
+        // For non-monorepos
+        yield git.add(['dist/*']);
+        yield git.add(['dist-typings/*']);
         const hash = process.env.GITHUB_SHA;
         (0, log_1.debugLog)(`** Committing staged changes`);
         yield git.commit(`Bundled output for commit ${hash}
