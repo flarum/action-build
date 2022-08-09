@@ -35,17 +35,23 @@ export default async function commitChangesToGit(jp: FSJetpack): Promise<void> {
 
   await git.addConfig('user.name', config.author.name).addConfig('user.email', config.author.email);
 
+  const status = await git.status();
+
+  if (status.isClean()) {
+    log('No changes to commit.');
+    return;
+  }
+
   debugLog(`** Staging all changes`);
 
   if (core.getInput('commit_all_dirty') === 'true') await git.add(['-A']);
 
-  // For monorepos
-  await git.add(["':(glob)**/*/js/dist-typings/*'"]);
-  await git.add(["':(glob)**/*/js/dist/*'"]);
-
-  // For non-monorepos
-  await git.add(['dist/*']);
-  await git.add(['dist-typings/*']);
+  status.files.forEach((file) => {
+    if (file.path.match(/^([A-z0-9_\/-]*\/){0,1}js\/(?:dist|dist-typings)\/.*$/)) {
+      debugLog(`** Staging ${file.path}`);
+      git.add(file.path);
+    }
+  });
 
   const hash = process.env.GITHUB_SHA;
 
@@ -60,8 +66,6 @@ Includes transpiled JS/TS${core.getInput('build_typings_script') !== '' ? ', and
   debugLog(`** Pushing commit`);
 
   await git.addRemote('upstream', `https://${process.env.GITHUB_ACTOR}:${token}@github.com/${process.env.GITHUB_REPOSITORY}.git`);
-
-  const status = await git.status();
 
   log(`${status}`);
 

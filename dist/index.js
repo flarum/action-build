@@ -327,15 +327,20 @@ function commitChangesToGit(jp) {
         };
         const git = (0, simple_git_1.default)(options);
         yield git.addConfig('user.name', config.author.name).addConfig('user.email', config.author.email);
+        const status = yield git.status();
+        if (status.isClean()) {
+            (0, log_1.log)('No changes to commit.');
+            return;
+        }
         (0, log_1.debugLog)(`** Staging all changes`);
         if (core.getInput('commit_all_dirty') === 'true')
             yield git.add(['-A']);
-        // For monorepos
-        yield git.add(["':(glob)**/*/js/dist-typings/*'"]);
-        yield git.add(["':(glob)**/*/js/dist/*'"]);
-        // For non-monorepos
-        yield git.add(['dist/*']);
-        yield git.add(['dist-typings/*']);
+        status.files.forEach(file => {
+            if (file.path.match(/^([A-z0-9_\/-]*\/){0,1}js\/(?:dist|dist-typings)\/.*$/)) {
+                (0, log_1.debugLog)(`** Staging ${file.path}`);
+                git.add(file.path);
+            }
+        });
         const hash = process.env.GITHUB_SHA;
         (0, log_1.debugLog)(`** Committing staged changes`);
         yield git.commit(`Bundled output for commit ${hash}
@@ -345,7 +350,6 @@ Includes transpiled JS/TS${core.getInput('build_typings_script') !== '' ? ', and
         const token = core.getInput('github_token', { required: true, trimWhitespace: true });
         (0, log_1.debugLog)(`** Pushing commit`);
         yield git.addRemote('upstream', `https://${process.env.GITHUB_ACTOR}:${token}@github.com/${process.env.GITHUB_REPOSITORY}.git`);
-        const status = yield git.status();
         (0, log_1.log)(`${status}`);
         yield git.push(`upstream`);
         (0, log_1.log)(`-- Pushed commit ${hash}`);
