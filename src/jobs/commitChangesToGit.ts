@@ -37,10 +37,10 @@ export default async function commitChangesToGit(jp: FSJetpack): Promise<void> {
 
   debugLog(`** Staging all changes`);
 
-  if (core.getInput('commit_all_dirty') !== '') await git.add(['./*', '-A']);
+  if (core.getInput('commit_all_dirty') === 'true') await git.add(['-A']);
 
-  await git.add(['*/*/js/dist-typings/*', '-f']);
-  await git.add(['*/*/js/dist/*', '-f']);
+  await git.add(['*/*/js/dist-typings/*']);
+  await git.add(['*/*/js/dist/*']);
 
   const hash = process.env.GITHUB_SHA;
 

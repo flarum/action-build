@@ -328,10 +328,10 @@ function commitChangesToGit(jp) {
         const git = (0, simple_git_1.default)(options);
         yield git.addConfig('user.name', config.author.name).addConfig('user.email', config.author.email);
         (0, log_1.debugLog)(`** Staging all changes`);
-        if (core.getInput('commit_all_dirty') !== '')
-            yield git.add(['./*', '-A']);
-        yield git.add(['*/*/js/dist-typings/*', '-f']);
-        yield git.add(['*/*/js/dist/*', '-f']);
+        if (core.getInput('commit_all_dirty') === 'true')
+            yield git.add(['-A']);
+        yield git.add(['*/*/js/dist-typings/*']);
+        yield git.add(['*/*/js/dist/*']);
         const hash = process.env.GITHUB_SHA;
         (0, log_1.debugLog)(`** Committing staged changes`);
         yield git.commit(`Bundled output for commit ${hash}
