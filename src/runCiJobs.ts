@@ -9,6 +9,7 @@ import runFormatCheckScript from './jobs/runFormatCheckScript';
 import commitChangesToGit from './jobs/commitChangesToGit';
 import runCheckTypingsScript from './jobs/runCheckTypingsScript';
 import runTypingCoverageScript from './jobs/runTypingCoverageScript';
+import runTestScript from "./jobs/runTestScript";
 
 type RunOptions = {
   noPrepare?: boolean;
@@ -53,6 +54,7 @@ export default async function runCiJobs(
   }
   if (!noPostBuildChecks) {
     await runCheckTypingsScript(pm, packageJson);
+    await runTestScript(pm, packageJson);
   }
   if (!noCommit) {
     await commitChangesToGit(jp);

@@ -24,6 +24,9 @@ inputs:
   type_coverage_script:
     description: (If needed) The name of the package.json script to run to assess TypeScript type coverage
     required: false
+  test_script:
+    description: (If needed) The name of the package.json script to run to run your tests
+    required: false
   package_manager:
     description: Name of your JS package manager (either npm or yarn)
     default: 'npm'
