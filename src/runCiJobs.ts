@@ -9,7 +9,7 @@ import runFormatCheckScript from './jobs/runFormatCheckScript';
 import commitChangesToGit from './jobs/commitChangesToGit';
 import runCheckTypingsScript from './jobs/runCheckTypingsScript';
 import runTypingCoverageScript from './jobs/runTypingCoverageScript';
-import runTestScript from "./jobs/runTestScript";
+import runTestScript from './jobs/runTestScript';
 
 type RunOptions = {
   noPrepare?: boolean;

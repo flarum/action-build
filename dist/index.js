@@ -335,7 +335,7 @@ function commitChangesToGit(jp) {
         (0, log_1.debugLog)(`** Staging all changes`);
         if (core.getInput('commit_all_dirty') === 'true')
             yield git.add(['-A']);
-        status.files.forEach(file => {
+        status.files.forEach((file) => {
             if (file.path.match(/^([A-z0-9_\/-]*\/){0,1}js\/(?:dist|dist-typings)\/.*$/)) {
                 (0, log_1.debugLog)(`** Staging ${file.path}`);
                 git.add(file.path);
@@ -646,6 +646,70 @@ exports["default"] = runFormatCheckScript;
 
 /***/ }),
 
+/***/ 3176:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(2186));
+const log_1 = __nccwpck_require__(6644);
+const canRunScript_1 = __importDefault(__nccwpck_require__(7462));
+/**
+ * Runs typings coverage script using the selected package manager, if the feature
+ * is enabled.
+ */
+function runTestScript(packageManager, packageJson) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const testScript = core.getInput('test_script');
+        if (!(0, canRunScript_1.default)(testScript, packageJson)) {
+            (0, log_1.debugLog)(`** [${packageJson.name || '-'}] Skipping test script`);
+            return;
+        }
+        (0, log_1.log)(`-- [${packageJson.name || '-'}] Running test script...`);
+        yield packageManager.runPackageScript(testScript);
+    });
+}
+exports["default"] = runTestScript;
+
+
+/***/ }),
+
 /***/ 8112:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -919,6 +983,7 @@ const runFormatCheckScript_1 = __importDefault(__nccwpck_require__(5768));
 const commitChangesToGit_1 = __importDefault(__nccwpck_require__(489));
 const runCheckTypingsScript_1 = __importDefault(__nccwpck_require__(5033));
 const runTypingCoverageScript_1 = __importDefault(__nccwpck_require__(8112));
+const runTestScript_1 = __importDefault(__nccwpck_require__(3176));
 /**
  * Automatically detect and run the appropriate CI jobs for the current repository.
  *
@@ -947,6 +1012,7 @@ function runCiJobs(path = './', { noPrepare, noPreBuildChecks, noBuild, noPostBu
         }
         if (!noPostBuildChecks) {
             yield (0, runCheckTypingsScript_1.default)(pm, packageJson);
+            yield (0, runTestScript_1.default)(pm, packageJson);
         }
         if (!noCommit) {
             yield (0, commitChangesToGit_1.default)(jp);
