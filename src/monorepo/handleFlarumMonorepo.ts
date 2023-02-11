@@ -5,6 +5,7 @@ import { debugLog, log } from '../helper/log';
 import commitChangesToGit from '../jobs/commitChangesToGit';
 import runCiJobs from '../runCiJobs';
 import isDirectoryFlarumExtension from './isDirectoryFlarumExtension';
+import * as core from '@actions/core';
 
 interface IPackageInfo {
   name: string;
@@ -79,37 +80,43 @@ export async function handleFlarumMonorepo(): Promise<boolean> {
   // Run the CI jobs for each repository in parallel and wait for completion
 
   // First, run the pre-build & build scripts.
-  await Promise.all(
-    filteredRepositories.map((repository) =>
-      runCiJobs(
-        repository.pathToDir,
-        {
-          postBuildChecks: false,
-          commit: false,
-          packageName: repository.name
-        }
+  await core.group('Pre-build scripts', async () => {
+    await Promise.all(
+      filteredRepositories.map((repository) =>
+        runCiJobs(
+          repository.pathToDir,
+          {
+            postBuildChecks: false,
+            commit: false,
+            packageName: repository.name
+          }
+        )
       )
-    )
-  );
+    );
+  });
 
   // Then, run the post-build scripts.
-  await Promise.all(
-    filteredRepositories.map((repository) =>
-      runCiJobs(
-        repository.pathToDir,
-        {
-          prepare: false,
-          preBuildChecks: false,
-          build: false,
-          commit: false,
-          packageName: repository.name
-        }
+  await core.group('Post-build scripts', async () => {
+    await Promise.all(
+      filteredRepositories.map((repository) =>
+        runCiJobs(
+          repository.pathToDir,
+          {
+            prepare: false,
+            preBuildChecks: false,
+            build: false,
+            commit: false,
+            packageName: repository.name
+          }
+        )
       )
-    )
-  );
+    );
+  });
 
   // Finally, if all went well, commit the changes to the main branch.
-  await commitChangesToGit(jetpack.cwd('./'));
+  await core.group('Commit changes', async () => {
+    await commitChangesToGit(jetpack.cwd('./'));
+  });
 
   return true;
 }
