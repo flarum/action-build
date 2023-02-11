@@ -12,11 +12,11 @@ import runTypingCoverageScript from './jobs/runTypingCoverageScript';
 import runTestScript from './jobs/runTestScript';
 
 type RunOptions = {
-  noPrepare?: boolean;
-  noPreBuildChecks?: boolean;
-  noBuild?: boolean;
-  noPostBuildChecks?: boolean;
-  noCommit?: boolean;
+  prepare?: boolean;
+  preBuildChecks?: boolean;
+  build?: boolean;
+  postBuildChecks?: boolean;
+  commit?: boolean;
 
   // For monorepositories.
   packageName?: string;
@@ -30,8 +30,17 @@ type RunOptions = {
  */
 export default async function runCiJobs(
   path = './',
-  { noPrepare, noPreBuildChecks, noBuild, noPostBuildChecks, noCommit, packageName }: RunOptions = {}
+  options: RunOptions = {}
 ): Promise<void> {
+  const {
+    prepare = true,
+    preBuildChecks = true,
+    build = true,
+    postBuildChecks = true,
+    commit = true,
+    packageName
+  } = options;
+
   log(`-- [${packageName || '-'}] Beginning CI jobs...`);
   debugLog(`** [${packageName || '-'}] Running CI jobs in \`${path}\``);
 
@@ -41,22 +50,26 @@ export default async function runCiJobs(
 
   if (!packageJson) return;
 
-  if (!noPrepare) {
+  if (prepare) {
     await installJsDependencies(pm);
   }
-  if (!noPreBuildChecks) {
+
+  if (preBuildChecks) {
     await runFormatCheckScript(pm, packageJson);
     await runTypingCoverageScript(pm, packageJson);
   }
-  if (!noBuild) {
+
+  if (build) {
     await runBuildTypingsScript(pm, packageJson);
     await runBuildScript(pm, packageJson);
   }
-  if (!noPostBuildChecks) {
+
+  if (postBuildChecks) {
     await runCheckTypingsScript(pm, packageJson);
     await runTestScript(pm, packageJson);
   }
-  if (!noCommit) {
+
+  if (commit) {
     await commitChangesToGit(jp);
   }
 }
