@@ -28,18 +28,8 @@ type RunOptions = {
  * Pass a custom path as the first parameter to run the CI jobs for a specific
  * subdirectory of the repository (useful for monorepo).
  */
-export default async function runCiJobs(
-  path = './',
-  options: RunOptions = {}
-): Promise<void> {
-  const {
-    prepare = true,
-    preBuildChecks = true,
-    build = true,
-    postBuildChecks = true,
-    commit = true,
-    packageName
-  } = options;
+export default async function runCiJobs(path = './', options: RunOptions = {}): Promise<void> {
+  const { prepare = true, preBuildChecks = true, build = true, postBuildChecks = true, commit = true, packageName } = options;
 
   log(`-- [${packageName || '-'}] Beginning CI jobs...`);
   debugLog(`** [${packageName || '-'}] Running CI jobs in \`${path}\``);

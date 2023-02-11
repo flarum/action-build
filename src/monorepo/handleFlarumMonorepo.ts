@@ -83,14 +83,11 @@ export async function handleFlarumMonorepo(): Promise<boolean> {
   await core.group('Pre-build scripts', async () => {
     await Promise.all(
       filteredRepositories.map((repository) =>
-        runCiJobs(
-          repository.pathToDir,
-          {
-            postBuildChecks: false,
-            commit: false,
-            packageName: repository.name
-          }
-        )
+        runCiJobs(repository.pathToDir, {
+          postBuildChecks: false,
+          commit: false,
+          packageName: repository.name,
+        })
       )
     );
   });
@@ -99,16 +96,13 @@ export async function handleFlarumMonorepo(): Promise<boolean> {
   await core.group('Post-build scripts', async () => {
     await Promise.all(
       filteredRepositories.map((repository) =>
-        runCiJobs(
-          repository.pathToDir,
-          {
-            prepare: false,
-            preBuildChecks: false,
-            build: false,
-            commit: false,
-            packageName: repository.name
-          }
-        )
+        runCiJobs(repository.pathToDir, {
+          prepare: false,
+          preBuildChecks: false,
+          build: false,
+          commit: false,
+          packageName: repository.name,
+        })
       )
     );
   });
