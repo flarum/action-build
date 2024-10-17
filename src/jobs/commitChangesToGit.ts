@@ -26,8 +26,8 @@ export default async function commitChangesToGit(jp: FSJetpack): Promise<void> {
 
   const config = {
     author: {
-      name: 'flarum-bot',
-      email: 'bot@flarum.org',
+      name: 'github-actions[bot]',
+      email: '41898282+github-actions[bot]@users.noreply.github.com',
     },
   };
 
@@ -61,11 +61,9 @@ Includes transpiled JS/TS${core.getInput('build_typings_script') !== '' ? ', and
 
 [skip ci]`);
 
-  const token = core.getInput('github_token', { required: true, trimWhitespace: true });
-
   debugLog(`** Pushing commit`);
 
-  await git.addRemote('upstream', `https://${process.env.GITHUB_ACTOR}:${token}@github.com/${process.env.GITHUB_REPOSITORY}.git`);
+  await git.addRemote('upstream', `https://github-actions:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPOSITORY}.git`);
 
   log(`${status}`);
 
