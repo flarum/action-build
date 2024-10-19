@@ -49,6 +49,8 @@ Here is a full list of options available using the `with` syntax:
 | `do_not_commit`        | No       | Set to `true` to NOT commit the built JS/Typings. Useful for validating JS source.                                      | `false`                       | `false` |
 | `checks`               | No       | An array of strings, where each is a script that should be run before committing built js.                              | `false`                       | `false` |
 | `commit_all_dirty`     | No       | Set to `true` to commit all file changes, not just files in the dist JS directory.                                      | `false`                       | `false` |
+| `git_actor__name`      | No       | Allows to set a different username (normally `flarum-bot`) for the actor which commits the bundles JS.                  | `acme-bot`                    | Unset   |
+| `git_actor__email`     | No       | Allows to set a different email for the actor which commits the bundled JS.                                             | `acme-bot@example.org`        | Unset   |
 
 ### Assumptions
 
