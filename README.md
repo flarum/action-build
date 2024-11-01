@@ -36,7 +36,7 @@ jobs:
 Here is a full list of options available using the `with` syntax:
 
 | Name                   | Required | Description                                                                                                             | Example                       | Default |
-|------------------------| -------- |-------------------------------------------------------------------------------------------------------------------------|-------------------------------| ------- |
+| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
 | `github_token`         | Yes      | Your Actions GitHub token. The example value should work for this by default.                                           | `${{ secrets.GITHUB_TOKEN }}` | None    |
 | `build_script`         | Yes      | The `package.json` script to run to build your extension JS.                                                            | `build`                       | `build` |
 | `build_typings_script` | No       | If defined, runs the script of this name in `package.json` to build typings for your extension.                         | `build-typings`               | Unset   |
@@ -49,8 +49,8 @@ Here is a full list of options available using the `with` syntax:
 | `do_not_commit`        | No       | Set to `true` to NOT commit the built JS/Typings. Useful for validating JS source.                                      | `false`                       | `false` |
 | `checks`               | No       | An array of strings, where each is a script that should be run before committing built js.                              | `false`                       | `false` |
 | `commit_all_dirty`     | No       | Set to `true` to commit all file changes, not just files in the dist JS directory.                                      | `false`                       | `false` |
-| `git_actor__name`      | No       | Allows to set a different username (normally `flarum-bot`) for the actor which commits the bundles JS.                  | `acme-bot`                    | Unset   |
-| `git_actor__email`     | No       | Allows to set a different email for the actor which commits the bundled JS.                                             | `acme-bot@example.org`        | Unset   |
+| `git_actor_name`       | No       | Allows to set a different username (normally `flarum-bot`) for the actor which commits the bundles JS.                  | `acme-bot`                    | Unset   |
+| `git_actor_email`      | No       | Allows to set a different email for the actor which commits the bundled JS.                                             | `acme-bot@example.org`        | Unset   |
 
 ### Assumptions
 
