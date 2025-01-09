@@ -5,9 +5,6 @@ runs:
   using: 'node20'
   main: 'dist/index.js'
 inputs:
-  github_token:
-    description: 'Token used to push built JS code to your GitHub repository (if in doubt, use "(dollar-sign){{ secrets.GITHUB_TOKEN }}")'
-    required: true
   build_script:
     description: The name of the package.json script to run to build your JS code
     default: 'build'

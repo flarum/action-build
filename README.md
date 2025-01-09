@@ -21,7 +21,6 @@ jobs:
       - uses: actions/checkout@master
       - uses: flarum/action-build@2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           build_script: build # npm run build
           build_typings_script: build-typings # npm run build-typings
           test_script: test # npm run test
@@ -37,7 +36,6 @@ Here is a full list of options available using the `with` syntax:
 
 | Name                   | Required | Description                                                                                                             | Example                       | Default |
 | ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
-| `github_token`         | Yes      | Your Actions GitHub token. The example value should work for this by default.                                           | `${{ secrets.GITHUB_TOKEN }}` | None    |
 | `build_script`         | Yes      | The `package.json` script to run to build your extension JS.                                                            | `build`                       | `build` |
 | `build_typings_script` | No       | If defined, runs the script of this name in `package.json` to build typings for your extension.                         | `build-typings`               | Unset   |
 | `format_script`        | No       | If defined, runs the script of this name in `package.json` to check code formatting of your extension's JS.             | `format-check`                | Unset   |
