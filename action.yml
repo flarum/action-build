@@ -5,9 +5,6 @@ runs:
   using: 'node20'
   main: 'dist/index.js'
 inputs:
-  github_token:
-    description: 'Token used to push built JS code to your GitHub repository (if in doubt, use "(dollar-sign){{ secrets.GITHUB_TOKEN }}")'
-    required: true
   build_script:
     description: The name of the package.json script to run to build your JS code
     default: 'build'
@@ -42,4 +39,10 @@ inputs:
   commit_all_dirty:
     description: Set to `true` to commit all file changes, not just files in the dist JS directory.
     default: 'false'
+    required: false
+  git_actor_name:
+    description: The name of the git actor to use for the bundled JS output.
+    required: false
+  git_actor_email:
+    description: The email of the git actor to use for the bundled JS output.
     required: false
