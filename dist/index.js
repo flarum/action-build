@@ -319,10 +319,12 @@ function commitChangesToGit(jp) {
             baseDir: jp.cwd(),
             maxConcurrentProcesses: 1,
         };
+        const gitActorName = core.getInput('git_actor_name', { required: false, trimWhitespace: true }) || 'flarum-bot';
+        const gitActorEmail = core.getInput('git_actor_email', { required: false, trimWhitespace: true }) || 'bot@flarum.org';
         const config = {
             author: {
-                name: 'flarum-bot',
-                email: 'bot@flarum.org',
+                name: gitActorName,
+                email: gitActorEmail,
             },
         };
         const git = (0, simple_git_1.default)(options);
@@ -347,9 +349,8 @@ function commitChangesToGit(jp) {
 Includes transpiled JS/TS${core.getInput('build_typings_script') !== '' ? ', and Typescript declaration files (typings)' : ''}.
 
 [skip ci]`);
-        const token = core.getInput('github_token', { required: true, trimWhitespace: true });
         (0, log_1.debugLog)(`** Pushing commit`);
-        yield git.addRemote('upstream', `https://${process.env.GITHUB_ACTOR}:${token}@github.com/${process.env.GITHUB_REPOSITORY}.git`);
+        yield git.addRemote('upstream', `https://github-actions:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPOSITORY}.git`);
         (0, log_1.log)(`${status}`);
         yield git.push(`upstream`);
         (0, log_1.log)(`-- Pushed commit ${hash}`);
