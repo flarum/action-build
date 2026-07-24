@@ -2,7 +2,7 @@ name: Flarum JavaScript Build
 description: Automatically compile your extension's JavaScript files
 author: 'Flarum'
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'dist/index.js'
 inputs:
   build_script:

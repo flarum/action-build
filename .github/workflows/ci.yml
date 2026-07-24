@@ -1,0 +1,46 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Compile (tsc)
+        run: yarn build
+
+      - name: Check formatting
+        run: yarn format-check
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Test
+        run: yarn test
+
+      # A bundled action ships its compiled `dist/`. Rebuild it and fail if the
+      # committed output is stale, so the action never runs against outdated code.
+      - name: Package
+        run: yarn package
+
+      - name: Verify dist/ is up to date
+        run: |
+          if [ -n "$(git status --porcelain dist/)" ]; then
+            echo "::error::dist/ is out of date. Run 'yarn package' and commit the result."
+            git --no-pager diff --stat dist/
+            exit 1
+          fi

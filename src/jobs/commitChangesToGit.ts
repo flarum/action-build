@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import * as core from '@actions/core';
 
 import simpleGit, { SimpleGitOptions } from 'simple-git';
@@ -38,23 +37,34 @@ export default async function commitChangesToGit(jp: FSJetpack): Promise<void> {
 
   await git.addConfig('user.name', config.author.name).addConfig('user.email', config.author.email);
 
-  const status = await git.status();
+  debugLog(`** Staging changes`);
 
-  if (status.isClean()) {
+  if (core.getInput('commit_all_dirty') === 'true') {
+    await git.add(['-A']);
+  } else {
+    // Stage the compiled output. These directories are typically gitignored
+    // (so they are not committed to feature branches), which means a plain
+    // `git add` — and `git status`, which powers simple-git's `isClean()` —
+    // would never see them. We force-add the paths so the bundled output is
+    // committed regardless of .gitignore. Missing directories are ignored
+    // (e.g. a repo with no typings build).
+    for (const dir of ['js/dist', 'js/dist-typings']) {
+      if (jp.exists(dir) === 'dir') {
+        debugLog(`** Force-staging ${dir}`);
+        await git.raw(['add', '--force', '--', dir]);
+      }
+    }
+  }
+
+  // Decide whether to commit based on what is actually staged, rather than on
+  // the working-tree status: gitignored files never show up as "dirty", so an
+  // `isClean()` check would wrongly report nothing to commit.
+  const staged = await git.diff(['--cached', '--name-only']);
+
+  if (staged.trim() === '') {
     log('No changes to commit.');
     return;
   }
-
-  debugLog(`** Staging all changes`);
-
-  if (core.getInput('commit_all_dirty') === 'true') await git.add(['-A']);
-
-  status.files.forEach((file) => {
-    if (file.path.match(/^([A-z0-9_\/-]*\/){0,1}js\/(?:dist|dist-typings)\/.*$/)) {
-      debugLog(`** Staging ${file.path}`);
-      git.add(file.path);
-    }
-  });
 
   const hash = process.env.GITHUB_SHA;
 
@@ -68,7 +78,7 @@ Includes transpiled JS/TS${core.getInput('build_typings_script') !== '' ? ', and
 
   await git.addRemote('upstream', `https://github-actions:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPOSITORY}.git`);
 
-  log(`${status}`);
+  log(`Staged for commit:\n${staged}`);
 
   await git.push(`upstream`);
 

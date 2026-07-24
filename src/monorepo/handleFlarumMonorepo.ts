@@ -22,10 +22,6 @@ interface MonorepoJsonContent {
   };
 }
 
-interface IPackageInfoWithPath extends IPackageInfo {
-  pathToDir: string;
-}
-
 /**
  * Detects if there is a `flarum-monorepo.json` file in the repository root.
  *

@@ -93,7 +93,7 @@ class JSPackageManagerInterop {
             switch (this.packageManager) {
                 case 'yarn':
                 case 'pnpm':
-                case 'npm':
+                case 'npm': {
                     const extensionName = this.extensionRoot.split('/').pop();
                     const errorMessage = `[${extensionName}] Failed running (${script})`;
                     const result = yield this.exec(['run', script, ...(options !== null && options !== void 0 ? options : [])]).catch((error) => {
@@ -108,6 +108,7 @@ class JSPackageManagerInterop {
                     if (!result || result.code !== 0)
                         (0, log_1.debugLog)(`** [${extensionName}] Failed running (${script})`);
                     break;
+                }
             }
         });
     }
@@ -224,7 +225,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.exec = void 0;
-// @ts-expect-error
+// @ts-expect-error `@npmcli/promise-spawn` does not ship type definitions.
 const promise_spawn_1 = __importDefault(__nccwpck_require__(7905));
 function exec(cmd, args, opts = {}, extra) {
     return (0, promise_spawn_1.default)(cmd, args, Object.assign(Object.assign({}, opts), { stdio: 'inherit' }), extra);
@@ -329,20 +330,32 @@ function commitChangesToGit(jp) {
         };
         const git = (0, simple_git_1.default)(options);
         yield git.addConfig('user.name', config.author.name).addConfig('user.email', config.author.email);
-        const status = yield git.status();
-        if (status.isClean()) {
+        (0, log_1.debugLog)(`** Staging changes`);
+        if (core.getInput('commit_all_dirty') === 'true') {
+            yield git.add(['-A']);
+        }
+        else {
+            // Stage the compiled output. These directories are typically gitignored
+            // (so they are not committed to feature branches), which means a plain
+            // `git add` — and `git status`, which powers simple-git's `isClean()` —
+            // would never see them. We force-add the paths so the bundled output is
+            // committed regardless of .gitignore. Missing directories are ignored
+            // (e.g. a repo with no typings build).
+            for (const dir of ['js/dist', 'js/dist-typings']) {
+                if (jp.exists(dir) === 'dir') {
+                    (0, log_1.debugLog)(`** Force-staging ${dir}`);
+                    yield git.raw(['add', '--force', '--', dir]);
+                }
+            }
+        }
+        // Decide whether to commit based on what is actually staged, rather than on
+        // the working-tree status: gitignored files never show up as "dirty", so an
+        // `isClean()` check would wrongly report nothing to commit.
+        const staged = yield git.diff(['--cached', '--name-only']);
+        if (staged.trim() === '') {
             (0, log_1.log)('No changes to commit.');
             return;
         }
-        (0, log_1.debugLog)(`** Staging all changes`);
-        if (core.getInput('commit_all_dirty') === 'true')
-            yield git.add(['-A']);
-        status.files.forEach((file) => {
-            if (file.path.match(/^([A-z0-9_\/-]*\/){0,1}js\/(?:dist|dist-typings)\/.*$/)) {
-                (0, log_1.debugLog)(`** Staging ${file.path}`);
-                git.add(file.path);
-            }
-        });
         const hash = process.env.GITHUB_SHA;
         (0, log_1.debugLog)(`** Committing staged changes`);
         yield git.commit(`Bundled output for commit ${hash}
@@ -351,7 +364,7 @@ Includes transpiled JS/TS${core.getInput('build_typings_script') !== '' ? ', and
 [skip ci]`);
         (0, log_1.debugLog)(`** Pushing commit`);
         yield git.addRemote('upstream', `https://github-actions:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPOSITORY}.git`);
-        (0, log_1.log)(`${status}`);
+        (0, log_1.log)(`Staged for commit:\n${staged}`);
         yield git.push(`upstream`);
         (0, log_1.log)(`-- Pushed commit ${hash}`);
     });
