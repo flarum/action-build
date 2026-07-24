@@ -3,6 +3,7 @@ import jetpack from 'fs-jetpack';
 import path from 'path';
 import { exec as __external_exec } from './exec';
 import { debugLog } from './log';
+import type PackageJson from './PackageJson';
 
 export default class JSPackageManagerInterop {
   static readonly SupportedPackageManagers = ['yarn', 'npm', 'pnpm'];
@@ -32,7 +33,7 @@ export default class JSPackageManagerInterop {
    */
   private pathToJsFolder: string;
 
-  private oneTimeSetupComplete: boolean = false;
+  private oneTimeSetupComplete = false;
 
   constructor(extensionRoot?: string, packageManager?: string, jsDirectory?: string) {
     this.extensionRoot = extensionRoot ?? './';
@@ -81,7 +82,7 @@ export default class JSPackageManagerInterop {
     switch (this.packageManager) {
       case 'yarn':
       case 'pnpm':
-      case 'npm':
+      case 'npm': {
         const extensionName = this.extensionRoot.split('/').pop();
         const errorMessage = `[${extensionName}] Failed running (${script})`;
 
@@ -97,6 +98,7 @@ export default class JSPackageManagerInterop {
         if (!result || result.code !== 0) debugLog(`** [${extensionName}] Failed running (${script})`);
 
         break;
+      }
     }
   }
 
@@ -141,7 +143,7 @@ export default class JSPackageManagerInterop {
   /**
    * Parses `package.json` and returns an object.
    */
-  public async getPackageJson(): Promise<any> {
+  public async getPackageJson(): Promise<PackageJson | undefined> {
     const monorepo = !jetpack.exists(this.pathToJsFolder + '/package.json');
 
     // This is needed for a monorepo context.

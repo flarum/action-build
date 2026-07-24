@@ -93,7 +93,7 @@ class JSPackageManagerInterop {
             switch (this.packageManager) {
                 case 'yarn':
                 case 'pnpm':
-                case 'npm':
+                case 'npm': {
                     const extensionName = this.extensionRoot.split('/').pop();
                     const errorMessage = `[${extensionName}] Failed running (${script})`;
                     const result = yield this.exec(['run', script, ...(options !== null && options !== void 0 ? options : [])]).catch((error) => {
@@ -108,6 +108,7 @@ class JSPackageManagerInterop {
                     if (!result || result.code !== 0)
                         (0, log_1.debugLog)(`** [${extensionName}] Failed running (${script})`);
                     break;
+                }
             }
         });
     }
@@ -224,7 +225,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.exec = void 0;
-// @ts-expect-error
+// @ts-expect-error `@npmcli/promise-spawn` does not ship type definitions.
 const promise_spawn_1 = __importDefault(__nccwpck_require__(7905));
 function exec(cmd, args, opts = {}, extra) {
     return (0, promise_spawn_1.default)(cmd, args, Object.assign(Object.assign({}, opts), { stdio: 'inherit' }), extra);

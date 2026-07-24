@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 
 import type JSPackageManagerInterop from '../helper/JSPackageManagerInterop';
+import type PackageJson from '../helper/PackageJson';
 import { debugLog, log } from '../helper/log';
 import canRunScript from '../helper/canRunScript';
 
@@ -8,7 +9,7 @@ import canRunScript from '../helper/canRunScript';
  * Runs build typings script using the selected package manager, if the feature
  * is enabled.
  */
-export default async function runBuildTypingsScript(packageManager: JSPackageManagerInterop, packageJson: any): Promise<void> {
+export default async function runBuildTypingsScript(packageManager: JSPackageManagerInterop, packageJson: PackageJson): Promise<void> {
   const buildTypingsScript = core.getInput('build_typings_script');
 
   if (!canRunScript(buildTypingsScript, packageJson)) {

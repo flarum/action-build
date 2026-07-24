@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import type JSPackageManagerInterop from '../helper/JSPackageManagerInterop';
+import type PackageJson from '../helper/PackageJson';
 import { debugLog, log } from '../helper/log';
 import canRunScript from '../helper/canRunScript';
 
@@ -7,7 +8,7 @@ import canRunScript from '../helper/canRunScript';
  * Runs JS formatting checker script from `package.json`, if the feature
  * is enabled.
  */
-export default async function runFormatCheckScript(packageManager: JSPackageManagerInterop, packageJson: any): Promise<void> {
+export default async function runFormatCheckScript(packageManager: JSPackageManagerInterop, packageJson: PackageJson): Promise<void> {
   const checkFormattingScript = core.getInput('format_script');
 
   if (!canRunScript(checkFormattingScript, packageJson)) {

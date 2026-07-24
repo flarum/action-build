@@ -1,4 +1,4 @@
-// @ts-expect-error
+// @ts-expect-error `@npmcli/promise-spawn` does not ship type definitions.
 import promiseSpawn from '@npmcli/promise-spawn';
 
 import type { SpawnOptions, SpawnOptionsWithStdioTuple, StdioNull, StdioPipe } from 'child_process';
@@ -12,7 +12,7 @@ interface DefaultSpawnResult {
   stderr: Buffer | string;
 }
 
-type SpawnResult<Extra extends Record<string, unknown> = {}> = Merge<Extra, DefaultSpawnResult>;
+type SpawnResult<Extra extends Record<string, unknown> = Record<string, unknown>> = Merge<Extra, DefaultSpawnResult>;
 
 interface CustomSpawnOptions {
   stdioString?: boolean;
@@ -21,7 +21,7 @@ interface CustomSpawnOptions {
 type FinalSpawnOptions = (SpawnOptions | SpawnOptionsWithStdioTuple<StdioPipe | StdioNull, StdioPipe | StdioNull, StdioPipe | StdioNull>) &
   CustomSpawnOptions;
 
-export function exec<Extra extends Record<string, unknown> = {}>(
+export function exec<Extra extends Record<string, unknown> = Record<string, unknown>>(
   cmd: string,
   args: ReadonlyArray<string>,
   opts: FinalSpawnOptions = {},
