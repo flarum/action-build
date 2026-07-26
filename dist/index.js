@@ -339,12 +339,36 @@ function commitChangesToGit(jp) {
             // (so they are not committed to feature branches), which means a plain
             // `git add` — and `git status`, which powers simple-git's `isClean()` —
             // would never see them. We force-add the paths so the bundled output is
-            // committed regardless of .gitignore. Missing directories are ignored
-            // (e.g. a repo with no typings build).
-            for (const dir of ['js/dist', 'js/dist-typings']) {
-                if (jp.exists(dir) === 'dir') {
-                    (0, log_1.debugLog)(`** Force-staging ${dir}`);
-                    yield git.raw(['add', '--force', '--', dir]);
+            // committed regardless of .gitignore.
+            //
+            // The globs match `js/dist` and `js/dist-typings` at ANY depth, so a
+            // monorepo's per-package output (e.g. `framework/core/js/dist`,
+            // `extensions/<name>/js/dist`) is picked up as well as a single-package
+            // top-level `js/dist`. Third-party copies under `vendor/` and
+            // `node_modules/` are excluded so they are never committed.
+            //
+            // Each output glob is staged separately: `git add` fails the whole command
+            // if any pathspec matches nothing, and a repo may legitimately have `dist`
+            // but no `dist-typings` (or neither). Staging them independently — and
+            // tolerating a no-match — keeps one missing directory from aborting the rest.
+            for (const glob of ['**/js/dist/**', '**/js/dist-typings/**']) {
+                (0, log_1.debugLog)(`** Force-staging ${glob}`);
+                try {
+                    yield git.raw([
+                        'add',
+                        '--force',
+                        '--',
+                        `:(glob)${glob}`,
+                        ':(glob,exclude)**/vendor/**',
+                        ':(glob,exclude)**/node_modules/**',
+                    ]);
+                }
+                catch (e) {
+                    // "pathspec did not match any files" is expected when this output
+                    // directory doesn't exist; anything else is a real error.
+                    if (!(e instanceof Error) || !/did not match any files/.test(e.message)) {
+                        throw e;
+                    }
                 }
             }
         }
