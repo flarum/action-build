@@ -354,14 +354,7 @@ function commitChangesToGit(jp) {
             for (const glob of ['**/js/dist/**', '**/js/dist-typings/**']) {
                 (0, log_1.debugLog)(`** Force-staging ${glob}`);
                 try {
-                    yield git.raw([
-                        'add',
-                        '--force',
-                        '--',
-                        `:(glob)${glob}`,
-                        ':(glob,exclude)**/vendor/**',
-                        ':(glob,exclude)**/node_modules/**',
-                    ]);
+                    yield git.raw(['add', '--force', '--', `:(glob)${glob}`, ':(glob,exclude)**/vendor/**', ':(glob,exclude)**/node_modules/**']);
                 }
                 catch (e) {
                     // "pathspec did not match any files" is expected when this output
