@@ -41,6 +41,9 @@ jobs:
         run: |
           if [ -n "$(git status --porcelain dist/)" ]; then
             echo "::error::dist/ is out of date. Run 'yarn package' and commit the result."
+            echo "--- node/ncc ---"; node --version
             git --no-pager diff --stat dist/
+            echo "--- index.js diff (excluding the sourcemap) ---"
+            git --no-pager diff -- dist/index.js
             exit 1
           fi
