@@ -108,3 +108,33 @@ test('respects do_not_commit', async () => {
 
   expect(after).toBe(before);
 });
+
+test('commits nested dist output in a monorepo', async () => {
+  // A monorepo has no top-level js/dist; the compiled output lives under each
+  // package, e.g. framework/core/js/dist and extensions/<name>/js/dist.
+  jetpack.write(path.join(workDir, 'framework/core/js/dist/forum.js'), '// core');
+  jetpack.write(path.join(workDir, 'framework/core/js/dist-typings/index.d.ts'), '// types');
+  jetpack.write(path.join(workDir, 'extensions/tags/js/dist/forum.js'), '// tags');
+
+  await commitChangesToGit(jetpack.cwd(workDir));
+
+  const tracked = git(workDir, ['ls-tree', '-r', '--name-only', 'HEAD']);
+  expect(tracked).toContain('framework/core/js/dist/forum.js');
+  expect(tracked).toContain('framework/core/js/dist-typings/index.d.ts');
+  expect(tracked).toContain('extensions/tags/js/dist/forum.js');
+});
+
+test('does not commit dist inside vendor or node_modules', async () => {
+  // A real dist we DO want committed, plus third-party copies we must never
+  // commit (vendored packages, installed deps).
+  jetpack.write(path.join(workDir, 'framework/core/js/dist/forum.js'), '// core');
+  jetpack.write(path.join(workDir, 'extensions/realtime/vendor/flarum/core/js/dist/forum.js'), '// vendored');
+  jetpack.write(path.join(workDir, 'js/node_modules/some-dep/js/dist/index.js'), '// dep');
+
+  await commitChangesToGit(jetpack.cwd(workDir));
+
+  const tracked = git(workDir, ['ls-tree', '-r', '--name-only', 'HEAD']);
+  expect(tracked).toContain('framework/core/js/dist/forum.js');
+  expect(tracked).not.toContain('vendor/flarum/core/js/dist/forum.js');
+  expect(tracked).not.toContain('node_modules/some-dep/js/dist/index.js');
+});
