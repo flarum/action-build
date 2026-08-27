@@ -8,16 +8,29 @@ import canRunScript from '../helper/canRunScript';
 /**
  * Runs build typings script using the selected package manager, if the feature
  * is enabled.
+ *
+ * @param quiet Suppress the failure annotation, for a pass that will be retried.
+ *
+ * @return Whether the typings were built (or the script was skipped).
  */
-export default async function runBuildTypingsScript(packageManager: JSPackageManagerInterop, packageJson: PackageJson): Promise<void> {
+export default async function runBuildTypingsScript(
+  packageManager: JSPackageManagerInterop,
+  packageJson: PackageJson,
+  { quiet = false } = {}
+): Promise<boolean> {
   const buildTypingsScript = core.getInput('build_typings_script');
 
   if (!canRunScript(buildTypingsScript, packageJson)) {
     debugLog(`** [${packageJson.name || '-'}] Skipping typings build script`);
-    return;
+    return true;
   }
 
   log(`-- [${packageJson.name || '-'}] Running Typescript typings build script...`);
+
+  if (quiet) {
+    return packageManager.runPackageScript(buildTypingsScript, [], { exitOnError: false, annotateFailure: false });
+  }
+
   // Typings build often has errors -- let's not exit if we have any issues
-  await packageManager.runPackageScript(buildTypingsScript, [], { exitOnError: false });
+  return packageManager.runPackageScript(buildTypingsScript, [], { exitOnError: false });
 }

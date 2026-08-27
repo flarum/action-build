@@ -85,9 +85,11 @@ class JSPackageManagerInterop {
      *
      * @param script Name of the `package.json` script to run.
      * @param options Any options to pass to the script.
-     * @param { exitOnError }
+     * @param { exitOnError, annotateFailure }
+     *
+     * @return Whether the script ran successfully.
      */
-    runPackageScript(script, options, { exitOnError = true } = {}) {
+    runPackageScript(script, options, { exitOnError = true, annotateFailure = true } = {}) {
         return __awaiter(this, void 0, void 0, function* () {
             this.performOneTimeSetup();
             switch (this.packageManager) {
@@ -101,15 +103,20 @@ class JSPackageManagerInterop {
                             (0, log_1.debugLog)(error);
                             core.setFailed(errorMessage);
                         }
-                        else
+                        else if (annotateFailure)
                             core.warning(errorMessage);
+                        else
+                            (0, log_1.debugLog)(errorMessage);
                     });
                     (0, log_1.debugLog)(`** [${extensionName}] Result of (${script}): ${(result && result.code) || 'unknown'}`);
-                    if (!result || result.code !== 0)
+                    if (!result || result.code !== 0) {
                         (0, log_1.debugLog)(`** [${extensionName}] Failed running (${script})`);
-                    break;
+                        return false;
+                    }
+                    return true;
                 }
             }
+            return false;
         });
     }
     /**
@@ -258,6 +265,51 @@ function log(msg) {
     return true;
 }
 exports.log = log;
+
+
+/***/ }),
+
+/***/ 1496:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+/**
+ * Runs `fn` over every item, with at most `limit` items in flight at once.
+ *
+ * Results come back in input order. A rejected task rejects the returned
+ * promise, the same way `Promise.all` does.
+ */
+function mapWithConcurrency(items, limit, fn) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (items.length === 0)
+            return [];
+        const results = new Array(items.length);
+        const workerCount = Math.max(1, Math.min(Math.floor(limit) || 1, items.length));
+        let nextIndex = 0;
+        const workers = Array.from({ length: workerCount }, () => __awaiter(this, void 0, void 0, function* () {
+            for (;;) {
+                const index = nextIndex++;
+                if (index >= items.length)
+                    return;
+                results[index] = yield fn(items[index], index);
+            }
+        }));
+        yield Promise.all(workers);
+        return results;
+    });
+}
+exports["default"] = mapWithConcurrency;
 
 
 /***/ }),
@@ -531,17 +583,24 @@ const canRunScript_1 = __importDefault(__nccwpck_require__(7462));
 /**
  * Runs build typings script using the selected package manager, if the feature
  * is enabled.
+ *
+ * @param quiet Suppress the failure annotation, for a pass that will be retried.
+ *
+ * @return Whether the typings were built (or the script was skipped).
  */
-function runBuildTypingsScript(packageManager, packageJson) {
+function runBuildTypingsScript(packageManager, packageJson, { quiet = false } = {}) {
     return __awaiter(this, void 0, void 0, function* () {
         const buildTypingsScript = core.getInput('build_typings_script');
         if (!(0, canRunScript_1.default)(buildTypingsScript, packageJson)) {
             (0, log_1.debugLog)(`** [${packageJson.name || '-'}] Skipping typings build script`);
-            return;
+            return true;
         }
         (0, log_1.log)(`-- [${packageJson.name || '-'}] Running Typescript typings build script...`);
+        if (quiet) {
+            return packageManager.runPackageScript(buildTypingsScript, [], { exitOnError: false, annotateFailure: false });
+        }
         // Typings build often has errors -- let's not exit if we have any issues
-        yield packageManager.runPackageScript(buildTypingsScript, [], { exitOnError: false });
+        return packageManager.runPackageScript(buildTypingsScript, [], { exitOnError: false });
     });
 }
 exports["default"] = runBuildTypingsScript;
@@ -922,7 +981,16 @@ const log_1 = __nccwpck_require__(6644);
 const commitChangesToGit_1 = __importDefault(__nccwpck_require__(489));
 const runCiJobs_1 = __importDefault(__nccwpck_require__(1468));
 const isDirectoryFlarumExtension_1 = __importDefault(__nccwpck_require__(5130));
+const mapWithConcurrency_1 = __importDefault(__nccwpck_require__(1496));
 const core = __importStar(__nccwpck_require__(2186));
+/**
+ * Reads a numeric action input, falling back to `fallback` when it is unset or
+ * not a positive number.
+ */
+function numericInput(name, fallback) {
+    const parsed = Number.parseInt(core.getInput(name), 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
 /**
  * Detects if there is a `flarum-monorepo.json` file in the repository root.
  *
@@ -961,24 +1029,58 @@ function handleFlarumMonorepo() {
         filteredRepositories.forEach((r) => {
             (0, util_1.debuglog)(`**  - ${r.name} (${r.pathToDir})`);
         });
-        // Run the CI jobs for each repository in parallel and wait for completion
-        // First, run the pre-build & build scripts.
+        const buildConcurrency = numericInput('max_parallel_packages', 4);
+        const testConcurrency = numericInput('max_parallel_test_packages', 2);
+        // Every package's tsconfig resolves `flarum/*` and `ext:flarum/*` to other
+        // packages' `dist-typings`, and a typings build usually clears its own output
+        // directory first. Packages therefore cannot emit typings at the same time as
+        // their siblings typecheck against them, so a package whose typings build
+        // failed is retried once the whole set has been emitted.
+        yield core.group('Typings', () => __awaiter(this, void 0, void 0, function* () {
+            const results = yield (0, mapWithConcurrency_1.default)(filteredRepositories, buildConcurrency, (repository) => (0, runCiJobs_1.default)(repository.pathToDir, {
+                preBuildChecks: false,
+                buildBundle: false,
+                postBuildChecks: false,
+                commit: false,
+                quietTypings: true,
+                packageName: repository.name,
+            }));
+            const retries = filteredRepositories.filter((_repository, index) => !results[index].typingsOk);
+            if (retries.length === 0)
+                return;
+            (0, log_1.log)(`-- Retrying typings for ${retries.length} package(s) now the full set has been emitted`);
+            for (const repository of retries) {
+                yield (0, runCiJobs_1.default)(repository.pathToDir, {
+                    prepare: false,
+                    preBuildChecks: false,
+                    buildBundle: false,
+                    postBuildChecks: false,
+                    commit: false,
+                    packageName: repository.name,
+                });
+            }
+        }));
+        // Then the pre-build checks and the bundle builds.
         yield core.group('Pre-build scripts', () => __awaiter(this, void 0, void 0, function* () {
-            yield Promise.all(filteredRepositories.map((repository) => (0, runCiJobs_1.default)(repository.pathToDir, {
+            yield (0, mapWithConcurrency_1.default)(filteredRepositories, buildConcurrency, (repository) => (0, runCiJobs_1.default)(repository.pathToDir, {
+                prepare: false,
+                buildTypings: false,
                 postBuildChecks: false,
                 commit: false,
                 packageName: repository.name,
-            })));
+            }));
         }));
-        // Then, run the post-build scripts.
+        // Then, run the post-build scripts. Each package's test script starts its own
+        // worker pool, so these run at a lower concurrency than the builds to keep the
+        // runner from being killed for exhausting memory.
         yield core.group('Post-build scripts', () => __awaiter(this, void 0, void 0, function* () {
-            yield Promise.all(filteredRepositories.map((repository) => (0, runCiJobs_1.default)(repository.pathToDir, {
+            yield (0, mapWithConcurrency_1.default)(filteredRepositories, testConcurrency, (repository) => (0, runCiJobs_1.default)(repository.pathToDir, {
                 prepare: false,
                 preBuildChecks: false,
                 build: false,
                 commit: false,
                 packageName: repository.name,
-            })));
+            }));
         }));
         // Finally, if all went well, commit the changes to the main branch.
         yield core.group('Commit changes', () => __awaiter(this, void 0, void 0, function* () {
@@ -1066,14 +1168,14 @@ const runTestScript_1 = __importDefault(__nccwpck_require__(3176));
  */
 function runCiJobs(path = './', options = {}) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { prepare = true, preBuildChecks = true, build = true, postBuildChecks = true, commit = true, packageName } = options;
+        const { prepare = true, preBuildChecks = true, build = true, postBuildChecks = true, commit = true, buildTypings = build, buildBundle = build, quietTypings = false, packageName, } = options;
         (0, log_1.log)(`-- [${packageName || '-'}] Beginning CI jobs...`);
         (0, log_1.debugLog)(`** [${packageName || '-'}] Running CI jobs in \`${path}\``);
         const jp = fs_jetpack_1.default.cwd(path);
         const pm = new JSPackageManagerInterop_1.default(path);
         const packageJson = yield pm.getPackageJson();
         if (!packageJson)
-            return;
+            return { typingsOk: true };
         if (prepare) {
             yield (0, installJsDependencies_1.default)(pm);
         }
@@ -1081,8 +1183,11 @@ function runCiJobs(path = './', options = {}) {
             yield (0, runFormatCheckScript_1.default)(pm, packageJson);
             yield (0, runTypingCoverageScript_1.default)(pm, packageJson);
         }
-        if (build) {
-            yield (0, runBuildTypingsScript_1.default)(pm, packageJson);
+        let typingsOk = true;
+        if (buildTypings) {
+            typingsOk = yield (0, runBuildTypingsScript_1.default)(pm, packageJson, { quiet: quietTypings });
+        }
+        if (buildBundle) {
             yield (0, runBuildScript_1.default)(pm, packageJson);
         }
         if (postBuildChecks) {
@@ -1092,6 +1197,7 @@ function runCiJobs(path = './', options = {}) {
         if (commit) {
             yield (0, commitChangesToGit_1.default)(jp);
         }
+        return { typingsOk };
     });
 }
 exports["default"] = runCiJobs;
