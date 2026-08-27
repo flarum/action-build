@@ -18,8 +18,19 @@ type RunOptions = {
   postBuildChecks?: boolean;
   commit?: boolean;
 
-  // For monorepositories.
+  // For monorepositories. These split the `build` phase, so the typings for
+  // every package can be emitted before any package's bundle is built.
+  buildTypings?: boolean;
+  buildBundle?: boolean;
+  quietTypings?: boolean;
   packageName?: string;
+};
+
+type RunResult = {
+  /**
+   * Whether the typings build succeeded. Always true when it did not run.
+   */
+  typingsOk: boolean;
 };
 
 /**
@@ -28,8 +39,18 @@ type RunOptions = {
  * Pass a custom path as the first parameter to run the CI jobs for a specific
  * subdirectory of the repository (useful for monorepo).
  */
-export default async function runCiJobs(path = './', options: RunOptions = {}): Promise<void> {
-  const { prepare = true, preBuildChecks = true, build = true, postBuildChecks = true, commit = true, packageName } = options;
+export default async function runCiJobs(path = './', options: RunOptions = {}): Promise<RunResult> {
+  const {
+    prepare = true,
+    preBuildChecks = true,
+    build = true,
+    postBuildChecks = true,
+    commit = true,
+    buildTypings = build,
+    buildBundle = build,
+    quietTypings = false,
+    packageName,
+  } = options;
 
   log(`-- [${packageName || '-'}] Beginning CI jobs...`);
   debugLog(`** [${packageName || '-'}] Running CI jobs in \`${path}\``);
@@ -38,7 +59,7 @@ export default async function runCiJobs(path = './', options: RunOptions = {}): 
   const pm = new JSPackageManagerInterop(path);
   const packageJson = await pm.getPackageJson();
 
-  if (!packageJson) return;
+  if (!packageJson) return { typingsOk: true };
 
   if (prepare) {
     await installJsDependencies(pm);
@@ -49,8 +70,13 @@ export default async function runCiJobs(path = './', options: RunOptions = {}): 
     await runTypingCoverageScript(pm, packageJson);
   }
 
-  if (build) {
-    await runBuildTypingsScript(pm, packageJson);
+  let typingsOk = true;
+
+  if (buildTypings) {
+    typingsOk = await runBuildTypingsScript(pm, packageJson, { quiet: quietTypings });
+  }
+
+  if (buildBundle) {
     await runBuildScript(pm, packageJson);
   }
 
@@ -62,4 +88,6 @@ export default async function runCiJobs(path = './', options: RunOptions = {}): 
   if (commit) {
     await commitChangesToGit(jp);
   }
+
+  return { typingsOk };
 }

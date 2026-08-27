@@ -5,7 +5,18 @@ import { debugLog, log } from '../helper/log';
 import commitChangesToGit from '../jobs/commitChangesToGit';
 import runCiJobs from '../runCiJobs';
 import isDirectoryFlarumExtension from './isDirectoryFlarumExtension';
+import mapWithConcurrency from '../helper/mapWithConcurrency';
 import * as core from '@actions/core';
+
+/**
+ * Reads a numeric action input, falling back to `fallback` when it is unset or
+ * not a positive number.
+ */
+function numericInput(name: string, fallback: number): number {
+  const parsed = Number.parseInt(core.getInput(name), 10);
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
 
 interface IPackageInfo {
   name: string;
@@ -73,33 +84,69 @@ export async function handleFlarumMonorepo(): Promise<boolean> {
     debuglog(`**  - ${r.name} (${r.pathToDir})`);
   });
 
-  // Run the CI jobs for each repository in parallel and wait for completion
+  const buildConcurrency = numericInput('max_parallel_packages', 4);
+  const testConcurrency = numericInput('max_parallel_test_packages', 2);
 
-  // First, run the pre-build & build scripts.
+  // Every package's tsconfig resolves `flarum/*` and `ext:flarum/*` to other
+  // packages' `dist-typings`, and a typings build usually clears its own output
+  // directory first. Packages therefore cannot emit typings at the same time as
+  // their siblings typecheck against them, so a package whose typings build
+  // failed is retried once the whole set has been emitted.
+  await core.group('Typings', async () => {
+    const results = await mapWithConcurrency(filteredRepositories, buildConcurrency, (repository) =>
+      runCiJobs(repository.pathToDir, {
+        preBuildChecks: false,
+        buildBundle: false,
+        postBuildChecks: false,
+        commit: false,
+        quietTypings: true,
+        packageName: repository.name,
+      })
+    );
+
+    const retries = filteredRepositories.filter((_repository, index) => !results[index].typingsOk);
+
+    if (retries.length === 0) return;
+
+    log(`-- Retrying typings for ${retries.length} package(s) now the full set has been emitted`);
+
+    for (const repository of retries) {
+      await runCiJobs(repository.pathToDir, {
+        prepare: false,
+        preBuildChecks: false,
+        buildBundle: false,
+        postBuildChecks: false,
+        commit: false,
+        packageName: repository.name,
+      });
+    }
+  });
+
+  // Then the pre-build checks and the bundle builds.
   await core.group('Pre-build scripts', async () => {
-    await Promise.all(
-      filteredRepositories.map((repository) =>
-        runCiJobs(repository.pathToDir, {
-          postBuildChecks: false,
-          commit: false,
-          packageName: repository.name,
-        })
-      )
+    await mapWithConcurrency(filteredRepositories, buildConcurrency, (repository) =>
+      runCiJobs(repository.pathToDir, {
+        prepare: false,
+        buildTypings: false,
+        postBuildChecks: false,
+        commit: false,
+        packageName: repository.name,
+      })
     );
   });
 
-  // Then, run the post-build scripts.
+  // Then, run the post-build scripts. Each package's test script starts its own
+  // worker pool, so these run at a lower concurrency than the builds to keep the
+  // runner from being killed for exhausting memory.
   await core.group('Post-build scripts', async () => {
-    await Promise.all(
-      filteredRepositories.map((repository) =>
-        runCiJobs(repository.pathToDir, {
-          prepare: false,
-          preBuildChecks: false,
-          build: false,
-          commit: false,
-          packageName: repository.name,
-        })
-      )
+    await mapWithConcurrency(filteredRepositories, testConcurrency, (repository) =>
+      runCiJobs(repository.pathToDir, {
+        prepare: false,
+        preBuildChecks: false,
+        build: false,
+        commit: false,
+        packageName: repository.name,
+      })
     );
   });
 

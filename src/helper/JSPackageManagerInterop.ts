@@ -74,9 +74,11 @@ export default class JSPackageManagerInterop {
    *
    * @param script Name of the `package.json` script to run.
    * @param options Any options to pass to the script.
-   * @param { exitOnError }
+   * @param { exitOnError, annotateFailure }
+   *
+   * @return Whether the script ran successfully.
    */
-  async runPackageScript(script: string, options?: string[], { exitOnError = true } = {}) {
+  async runPackageScript(script: string, options?: string[], { exitOnError = true, annotateFailure = true } = {}): Promise<boolean> {
     this.performOneTimeSetup();
 
     switch (this.packageManager) {
@@ -90,16 +92,23 @@ export default class JSPackageManagerInterop {
           if (exitOnError) {
             debugLog(error);
             core.setFailed(errorMessage);
-          } else core.warning(errorMessage);
+          } else if (annotateFailure) core.warning(errorMessage);
+          else debugLog(errorMessage);
         });
 
         debugLog(`** [${extensionName}] Result of (${script}): ${(result && result.code) || 'unknown'}`);
 
-        if (!result || result.code !== 0) debugLog(`** [${extensionName}] Failed running (${script})`);
+        if (!result || result.code !== 0) {
+          debugLog(`** [${extensionName}] Failed running (${script})`);
 
-        break;
+          return false;
+        }
+
+        return true;
       }
     }
+
+    return false;
   }
 
   /**
