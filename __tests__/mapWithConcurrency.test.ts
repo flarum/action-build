@@ -20,12 +20,16 @@ describe('mapWithConcurrency', () => {
     let inFlight = 0;
     let peak = 0;
 
-    await mapWithConcurrency(Array.from({ length: 12 }, (_, i) => i), 3, async () => {
-      inFlight++;
-      peak = Math.max(peak, inFlight);
-      await tick();
-      inFlight--;
-    });
+    await mapWithConcurrency(
+      Array.from({ length: 12 }, (_, i) => i),
+      3,
+      async () => {
+        inFlight++;
+        peak = Math.max(peak, inFlight);
+        await tick();
+        inFlight--;
+      }
+    );
 
     expect(peak).toBe(3);
   });

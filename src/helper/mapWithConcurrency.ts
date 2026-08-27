@@ -4,11 +4,7 @@
  * Results come back in input order. A rejected task rejects the returned
  * promise, the same way `Promise.all` does.
  */
-export default async function mapWithConcurrency<T, R>(
-  items: readonly T[],
-  limit: number,
-  fn: (item: T, index: number) => Promise<R>
-): Promise<R[]> {
+export default async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]> {
   if (items.length === 0) return [];
 
   const results: R[] = new Array(items.length);
