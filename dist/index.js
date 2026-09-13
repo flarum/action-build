@@ -65,7 +65,7 @@ class JSPackageManagerInterop {
      */
     installJsDependencies() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.performOneTimeSetup();
+            yield this.performOneTimeSetup();
             switch (this.packageManager) {
                 case 'yarn':
                     yield this.exec(['install', '--frozen-lockfile']);
@@ -91,7 +91,7 @@ class JSPackageManagerInterop {
      */
     runPackageScript(script, options, { exitOnError = true, annotateFailure = true } = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.performOneTimeSetup();
+            yield this.performOneTimeSetup();
             switch (this.packageManager) {
                 case 'yarn':
                 case 'pnpm':

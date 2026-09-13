@@ -51,7 +51,7 @@ export default class JSPackageManagerInterop {
    * If the lockfile is not up-to-date, this task will fail.
    */
   async installJsDependencies() {
-    this.performOneTimeSetup();
+    await this.performOneTimeSetup();
 
     switch (this.packageManager) {
       case 'yarn':
@@ -79,7 +79,7 @@ export default class JSPackageManagerInterop {
    * @return Whether the script ran successfully.
    */
   async runPackageScript(script: string, options?: string[], { exitOnError = true, annotateFailure = true } = {}): Promise<boolean> {
-    this.performOneTimeSetup();
+    await this.performOneTimeSetup();
 
     switch (this.packageManager) {
       case 'yarn':
